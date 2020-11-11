@@ -16,3 +16,8 @@ D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\PrankCall\obj\x64\Debug\PrankCall.csproj.CopyComplete
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\PrankCall\obj\x64\Debug\PrankCall.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\PrankCall\obj\x64\Debug\PrankCall.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\PrankCall\obj\x64\Debug\PrankCall.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\PrankCall\obj\x64\Debug\PrankCall.csproj.CoreCompileInputs.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\PrankCall\obj\x64\Debug\PrankCall.csproj.CopyComplete
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\PrankCall\obj\x64\Debug\PrankCall.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\PrankCall\obj\x64\Debug\PrankCall.pdb

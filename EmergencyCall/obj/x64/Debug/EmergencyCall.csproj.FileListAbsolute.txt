@@ -16,3 +16,8 @@ D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.csproj.CoreCompileInputs.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.csproj.CopyComplete
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\EmergencyCall\obj\x64\Debug\EmergencyCall.pdb

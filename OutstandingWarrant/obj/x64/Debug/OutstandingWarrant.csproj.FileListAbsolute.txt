@@ -32,3 +32,8 @@ D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csproj.CoreCompileInputs.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csproj.CopyComplete
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.pdb
