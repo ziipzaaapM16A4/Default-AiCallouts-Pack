@@ -1,0 +1,25 @@
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\ShotsFired.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\ShotsFired.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\AmbientAICallouts.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\LSPD First Response.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\RagePluginHookSDK.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\HeliAssistance.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\GrammarPolice.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\AmbientAICallouts.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\bin\x64\Release\de\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\obj\x64\Release\ShotsFired.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\obj\x64\Release\ShotsFired.csproj.CoreCompileInputs.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\obj\x64\Release\ShotsFired.csproj.CopyComplete
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\obj\x64\Release\ShotsFired.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\ShotsFired\obj\x64\Release\ShotsFired.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\bin\x64\Release\ShotsFired.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\bin\x64\Release\ShotsFired.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\bin\x64\Release\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\bin\x64\Release\de\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\obj\x64\Release\ShotsFired.csproj.CoreCompileInputs.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\obj\x64\Release\ShotsFired.csproj.CopyComplete
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\obj\x64\Release\ShotsFired.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\ShotsFired\obj\x64\Release\ShotsFired.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Release\ShotsFired.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Release\ShotsFired.pdb
