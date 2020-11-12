@@ -25,13 +25,13 @@ D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\bin\x64\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\bin\x64\Debug\AmbientAICallouts.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\bin\x64\Debug\de\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
-D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\OutstandingWarrant.dll
-D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\OutstandingWarrant.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csproj.CoreCompileInputs.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csproj.CopyComplete
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csprojAssemblyReference.cache
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\OutstandingWarrant.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\OutstandingWarrant.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csprojAssemblyReference.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csproj.CoreCompileInputs.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\OutstandingWarrant\obj\x64\Debug\OutstandingWarrant.csproj.CopyComplete

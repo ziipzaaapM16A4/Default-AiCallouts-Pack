@@ -9,13 +9,13 @@ D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\bin\x64\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\bin\x64\Debug\AmbientAICallouts.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\bin\x64\Debug\de\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
-D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\Fighting.dll
-D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\Fighting.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\obj\x64\Debug\Fighting.csprojAssemblyReference.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\obj\x64\Debug\Fighting.csproj.CoreCompileInputs.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\obj\x64\Debug\Fighting.csproj.CopyComplete
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\obj\x64\Debug\Fighting.dll
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default AiCallouts Pack\Fighting\obj\x64\Debug\Fighting.pdb
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\Fighting.dll
+D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\AmbientAICallouts\bin\x64\Debug\Fighting.pdb
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\Fighting\obj\x64\Debug\Fighting.csprojAssemblyReference.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\Fighting\obj\x64\Debug\Fighting.csproj.CoreCompileInputs.cache
 D:\#UserData\Dokumente 2 - TB\Development\Visual Studio\Repos\AmbientAICallouts\src\Default-AiCallouts-Pack\Fighting\obj\x64\Debug\Fighting.csproj.CopyComplete
