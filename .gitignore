@@ -329,3 +329,8 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+
+
+#Do not use these files    //Dev
+/Debug_AiC

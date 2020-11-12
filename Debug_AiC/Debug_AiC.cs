@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Rage;
 using AmbientAICallouts.API;
 using System.CodeDom;
@@ -15,9 +15,6 @@ namespace Debug_AiC
     ///internal List<Ped> unitOfficers = new List<Ped>();
     ///internal List<Ped> suspects = new List<Ped>();
     ///internal List<Vehicle> suspectsVehicle = new List<Vehicle>();
-
-    ///For almost every API Function you will need an so called "functions Object". It knows to current managerObject which contains most of the features in AiCalloutManager. The object name is always "fO"
-    //-------------------------->>> Important: Always use fO when calling functions to ensure you are using the right managerObject <<<-------------------------
 
     public class Debug_AiC : AiCallout
     {
