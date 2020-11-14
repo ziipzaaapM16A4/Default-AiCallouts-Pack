@@ -228,7 +228,7 @@ namespace OutstandingWarrant
                     //LogVerboseDebug_withAiC($"DEBUG: get Task 1");
 
 
-                    UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force);
+                    if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force); }
                     GameFiber.Sleep(12000);
 
                     senarioTaskAsigned = true;
