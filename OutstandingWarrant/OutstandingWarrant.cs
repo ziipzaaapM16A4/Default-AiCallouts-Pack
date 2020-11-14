@@ -7,6 +7,7 @@ using Rage;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using AmbientAICallouts.API;
 using LSPD_First_Response.Mod.API;
+using System.Xml;
 
 namespace OutstandingWarrant
 {
@@ -246,6 +247,7 @@ namespace OutstandingWarrant
 
                     if (IsAiTakingCare()) //checkforSelfhandle
                     {
+                        
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
                         Suspects[0].Tasks.AimWeaponAt(UnitOfficers[0], 30000);
                         GameFiber.Sleep(900);
@@ -266,24 +268,33 @@ namespace OutstandingWarrant
                         LogVerboseDebug_withAiC($"DEBUG: get Task 2");
 
                         GameFiber.SleepUntil(() => Suspects[0].IsDead, 30000);
-                        task = 3;
-                        LogVerboseDebug_withAiC($"DEBUG: get Task 3");
-                        GameFiber.Sleep(6000);
-                        //var RadioOfficerIndex = MathHelper.GetRandomInteger(0, UnitOfficers.Count);          //Radio Animation. Future
-                        //UnitOfficers[RadioOfficerIndex].Tasks.PlayAnimation()
+                        if (Suspects[0].IsDead)
+                        {
+                            task = 3;
+                            LogVerboseDebug_withAiC($"DEBUG: get Task 3");
+                            GameFiber.Sleep(6000);
+                            //var RadioOfficerIndex = MathHelper.GetRandomInteger(0, UnitOfficers.Count);          //Radio Animation. Future
+                            //UnitOfficers[RadioOfficerIndex].Tasks.PlayAnimation()
 
-                        GameFiber.Sleep(5000);
-                        if (!LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) ) { Suspects[0].Delete(); }
-                        GameFiber.Sleep(5000);
-                        EnterAndDismiss();
+                            GameFiber.Sleep(5000);
+                            if (!LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) ) { Suspects[0].Delete(); }
+                            GameFiber.Sleep(5000);
+                            EnterAndDismiss();
+                        }
+                        else
+                        {
+                            var Pursuit = LSPDFR_Functions.CreatePursuit();
+                            LSPDFR_Functions.AddPedToPursuit(Pursuit, Suspects[0]);
+                            while (LSPDFR_Functions.IsPursuitStillRunning(Pursuit)) { GameFiber.Sleep(1000); }
+                        }
                     }
-                    else //Callout fO.Get_AiC_suspects() are getting agressive 
+                    else //Callout Suspects() are getting agressive 
                     {
                         LogTrivial_withAiC($"INFO: choosed callout path");
                         task = 5;
                         LogVerboseDebug_withAiC($"DEBUG: get Task 5");
 
-                        switch (new Random().Next(0, 5))
+                        switch (new Random().Next(0, 3))
                         {
                             case 0:
                                 UnitCallsForBackup("AAIC-OfficerDown");
@@ -294,7 +305,6 @@ namespace OutstandingWarrant
                             case 2:
                                 UnitCallsForBackup("AAIC-OfficerUnderFire");
                                 break;
-                                //default:
                                 //default:
                                 //    UnitCallsForBackup("OfficerRequiringAssistance");
                                 //    break;

@@ -10,17 +10,7 @@ namespace ShotsFired
 {
     //Its very important to use these unless the AiCallout will not be compatible with the player callouts
     //Please use try catch blocks to get an error message when chrashing.
-    ///internal Vector3 location;
-    ///internal String callSign;
-    ///internal String calloutDetailsString;
-    ///internal Voicelines rndVl;
-    ///internal Vehicle unit;
-    ///internal List<Ped> unitOfficers = new List<Ped>();
-    ///internal List<Ped> suspects = new List<Ped>();
-    ///internal List<Vehicle> suspectsVehicle = new List<Vehicle>();
 
-    ///For almost every API Function you will need an so called "functions Object". It knows to current managerObject which contains most of the features in AiCalloutManager. The object name is always "fO"
-    //-------------------------->>> Important: Always use fO when calling functions to ensure you are using the right managerObject <<<-------------------------
 
     public class ShotsFired : AiCallout
     {

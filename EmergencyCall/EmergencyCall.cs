@@ -49,25 +49,22 @@ namespace EmergencyCall
                 }
                 else
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 0);
-                    Unit.IsSirenSilent = true;
-                    Unit.TopSpeed = 12f;
-
-                    GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
-                    Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
-                    GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
-                    OfficersLeaveVehicle(false);
-
-                    while (UnitOfficers[0].DistanceTo(caller) > 5f ||  (UnitOfficers.Count > 1 ? UnitOfficers[1].DistanceTo(caller) > 5f  : true)  )
-                    {
-                        foreach (var officer in UnitOfficers)
+                    bool startupFinished = false;
+                    GameFiber.StartNew(delegate
+                    { 
+                        while (Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) > 26f && !startupFinished)
                         {
-                            officer.Tasks.FollowNavigationMeshToPosition(caller.Position, MathHelper.ConvertDirectionToHeading(caller.Position), 1f,3.5f, 15000);
+                            GameFiber.Sleep(200);
                         }
-                        GameFiber.Sleep(800);
-                    }
-                    
+                        if (!startupFinished)
+                        {
+                            caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
+                            for (int i = 1; i < UnitOfficers.Count; i++) { UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
+                        }
+                    });
 
+                    OfficersAproach();
+                    startupFinished = true;
 
                     NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[0], caller, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
                     NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[1], caller, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
@@ -111,7 +108,7 @@ namespace EmergencyCall
                     while (!notebookAnimationFinished) { GameFiber.Sleep(1000); }
                     caller.Tasks.Wander();
                     caller.Dismiss();
-                    
+
                     if (UnitOfficers.Count > 1)
                     {
                         GameFiber.Sleep(1800);
@@ -119,6 +116,7 @@ namespace EmergencyCall
                         NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[1], UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
                         GameFiber.Sleep(8000);
                     }
+                    
                 }
                 return true;
             }
@@ -128,6 +126,28 @@ namespace EmergencyCall
                 return false;
             }
         }
+
+        private void OfficersAproach()
+        {
+            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 0);
+            Unit.IsSirenSilent = true;
+            Unit.TopSpeed = 12f;
+
+            GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+            Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
+            GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
+            OfficersLeaveVehicle(false);
+
+            while (UnitOfficers[0].DistanceTo(caller) > 5f || (UnitOfficers.Count > 1 ? UnitOfficers[1].DistanceTo(caller) > 5f : true))
+            {
+                foreach (var officer in UnitOfficers)
+                {
+                    officer.Tasks.FollowNavigationMeshToPosition(caller.Position, MathHelper.ConvertDirectionToHeading(caller.Position), 1f, 3.5f, 15000);
+                }
+                GameFiber.Sleep(800);
+            }
+        }
+
         public override bool End()
         {
             try
