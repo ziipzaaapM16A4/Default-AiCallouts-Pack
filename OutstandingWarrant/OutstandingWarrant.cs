@@ -286,6 +286,7 @@ namespace OutstandingWarrant
                             var Pursuit = LSPDFR_Functions.CreatePursuit();
                             LSPDFR_Functions.AddPedToPursuit(Pursuit, Suspects[0]);
                             while (LSPDFR_Functions.IsPursuitStillRunning(Pursuit)) { GameFiber.Sleep(1000); }
+                            //ISSUE: Officers & Peds get Dismissed before the Arrest is fullfilled.
                         }
                     }
                     else //Callout Suspects() are getting agressive 
@@ -305,7 +306,7 @@ namespace OutstandingWarrant
                             case 2:
                                 UnitCallsForBackup("AAIC-OfficerUnderFire");
                                 break;
-                                //default:
+                            //default:
                                 //    UnitCallsForBackup("OfficerRequiringAssistance");
                                 //    break;
                         }
