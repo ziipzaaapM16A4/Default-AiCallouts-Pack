@@ -86,7 +86,7 @@ namespace OutstandingWarrant
                     GameFiber.SleepUntil(
                         () => Unit.Position.DistanceTo(location) < 33f
                         || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 33f
-                        , 0);   //bin ich oder die fO.Get_AiC_unit() angekommen?
+                        , 0);   //bin ich oder die Unit angekommen?
 
                     GameFiber.StartNew(delegate {
                         GameFiber.Sleep(4000);
@@ -165,7 +165,7 @@ namespace OutstandingWarrant
                             {
                                 if (officer)
                                 {
-                                    if (thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing)
+                                    if (thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && (Suspects[0] ? !Suspects[0].IsDead : false))
                                         try { thisOfficer.Tasks.AimWeaponAt(Suspects[0].Position, 8000); } catch { }
                                 }
                                 GameFiber.Yield();
@@ -175,7 +175,7 @@ namespace OutstandingWarrant
                             {
                                 if (officer)
                                 {
-                                    if (thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) && !LSPDFR_Functions.IsPedArrested(Suspects[0]))
+                                    if (thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && (Suspects[0] ? !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) && !LSPDFR_Functions.IsPedArrested(Suspects[0]): false) )
                                     {
                                         try {
                                             LSPDFR_Functions.SetCopIgnoreAmbientCombatControl(officer, true);
