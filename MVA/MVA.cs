@@ -635,7 +635,7 @@ namespace MVA
 
         private void TaskIdentifySecondPed()
         {
-            Game.LogTrivialDebug("[AmbientAICallouts] [Callout OfficerRequiringAssistance] DEBUG: TaskIdentifySecondPed() entered");
+            LogTrivialDebug_withAiC("DEBUG: TaskIdentifySecondPed() entered");
             GameFiber.Sleep(500);                                                                                                           //still nessesarry? hier war einmal das ped 1 sich vom streit entfernt
             foreach (var officer in UnitOfficers) officer.Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop);
 
@@ -665,7 +665,7 @@ namespace MVA
             Suspects[1].PlayAmbientSpeech(null, "GENERIC_HI", 0, SpeechModifier.Force);
             GameFiber.Sleep(5000);
 
-            Game.LogTrivialDebug("[AmbientAICallouts] [Callout OfficerRequiringAssistance] DEBUG: choose what should happen");
+            LogTrivialDebug_withAiC(" DEBUG: choose what should happen");
             switch (new Random().Next(0, 3))
             {
                 case 0:
@@ -682,7 +682,7 @@ namespace MVA
 
         private void TaskJustGiveCover()
         {
-            Game.LogTrivialDebug("[AmbientAICallouts] [Callout OfficerRequiringAssistance] DEBUG: TaskJustGiveCover() entered");
+            LogTrivialDebug_withAiC(" DEBUG: TaskJustGiveCover() entered");
             GameFiber.SleepUntil(() => Game.LocalPlayer.Character.DistanceTo(UnitOfficers[0].Position) < 10f && Game.LocalPlayer.Character.IsOnFoot, 0);
             Game.DisplaySubtitle("~b~Officer~w~: Hey. Just cover us. " + (UnitOfficers.Count == 1 ? "I" : "We") + " handle this!", 6000);
 
@@ -692,7 +692,7 @@ namespace MVA
         private void Suspect1Flees()
         {
             GameFiber.Sleep(20000);
-            Game.LogTrivialDebug("[AmbientAICallouts] [Callout OfficerRequiringAssistance] DEBUG: Suspect1Flees() entered");
+            LogTrivialDebug_withAiC(" DEBUG: Suspect1Flees() entered");
             LHandle pursuit = LSPDFR_Functions.CreatePursuit();
             LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[0]);
             GameFiber.Sleep(1500);
@@ -707,7 +707,7 @@ namespace MVA
 
         private void Suspect2Flees()
         {
-            Game.LogTrivialDebug("[AmbientAICallouts] [Callout OfficerRequiringAssistance] DEBUG: Suspect2Flees() entered");
+            LogTrivialDebug_withAiC(" DEBUG: Suspect2Flees() entered");
             LSPDFR_Functions.AddPedContraband(Suspects[1], LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
 
             int i = 0;
@@ -739,7 +739,7 @@ namespace MVA
 
         private void NothingHappens()
         {
-            Game.LogTrivialDebug("[AmbientAICallouts] [Callout OfficerRequiringAssistance] DEBUG: NothingHappens() entered");
+            LogTrivialDebug_withAiC(" DEBUG: NothingHappens() entered");
             for (int i = 0; i < 46/*seconds*/; i++) if (!Game.IsPaused && !Rage.Native.NativeFunction.Natives.IS_PAUSE_MENU_ACTIVE<bool>()) { i++; GameFiber.Sleep(1000); }
             Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[0], Game.LocalPlayer.Character, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
             GameFiber.Sleep(1000);
