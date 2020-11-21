@@ -52,7 +52,7 @@ namespace EmergencyCall
                     bool startupFinished = false;
                     GameFiber.StartNew(delegate
                     { 
-                        while (Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) > 26f && !startupFinished)
+                        while (Game.LocalPlayer.Character.Position.DistanceTo(caller) > 26f && !startupFinished)
                         {
                             GameFiber.Sleep(200);
                         }
