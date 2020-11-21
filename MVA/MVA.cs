@@ -338,6 +338,7 @@ namespace MVA
                 GameFiber.StartNew(delegate
                 {
                     GameFiber.Sleep(61000);
+                    LogTrivial_withAiC("INFO: starting now the check for Entitys which has not been cleaned up. Deleting if not");
                     if (suspectsRecoveryVar.Any()) { 
                         foreach (var suspect in suspectsRecoveryVar) { 
                             if (suspect) 
