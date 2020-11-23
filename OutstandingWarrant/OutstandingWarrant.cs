@@ -228,7 +228,7 @@ namespace OutstandingWarrant
                     //LogVerboseDebug_withAiC($"DEBUG: get Task 1");
 
 
-                    if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force); }
+                    if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force); }
                     GameFiber.Sleep(12000);
 
                     senarioTaskAsigned = true;
@@ -240,7 +240,7 @@ namespace OutstandingWarrant
                     GameFiber.Sleep(500);
                     UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_01", "COP_SEES_WEAPON", 0, SpeechModifier.Force);
                     GameFiber.Sleep(1200);
-                    if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "DRAW_GUN", 0, SpeechModifier.Force); }
+                    if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "DRAW_GUN", 0, SpeechModifier.Force); }
                     else { UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("S_M_Y_COP_01_WHITE_FULL_01"), "DRAW_GUN", 0, SpeechModifier.Force); }
                     GameFiber.Sleep(2000);
 
@@ -251,13 +251,13 @@ namespace OutstandingWarrant
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
                         Suspects[0].Tasks.AimWeaponAt(UnitOfficers[0], 30000);
                         GameFiber.Sleep(900);
-                        if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
+                        if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
                         UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                         GameFiber.Sleep(900);
-                        if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
+                        if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
                         UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                         GameFiber.Sleep(900);
-                        if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
+                        if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
                         UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                         GameFiber.Sleep(2000);
 

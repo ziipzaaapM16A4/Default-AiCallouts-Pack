@@ -731,7 +731,7 @@ namespace MVA
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[1]);
                 GameFiber.Sleep(1800);
                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                if (UnitOfficers[1]) LSPDFR_Functions.AddCopToPursuit(pursuit, UnitOfficers[1]);
+                if (UnitOfficers.Count > 1) LSPDFR_Functions.AddCopToPursuit(pursuit, UnitOfficers[1]);
                 AiCandHA_AddHelicopterToPursuit(pursuit);
                 GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
                 //ISSUE: Officers & Peds get Dismissed before the Arrest is fullfilled.

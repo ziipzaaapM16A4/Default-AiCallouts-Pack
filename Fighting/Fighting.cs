@@ -73,11 +73,11 @@ namespace Fighting
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
                         LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
                         var taskGoWhileAiming0 = UnitOfficers[0].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot);
-                        if (UnitOfficers[1] && Suspects[1]) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[1], Suspects[1], 5f, 1f, false, FiringPattern.SingleShot); }
-                        else if (UnitOfficers[1]) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot); }
+                        if (UnitOfficers.Count > 1 && Suspects[1]) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[1], Suspects[1], 5f, 1f, false, FiringPattern.SingleShot); }
+                        else if (UnitOfficers.Count > 1) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot); }
                         GameFiber.WaitWhile(() => taskGoWhileAiming0.IsActive, 10000);
                         UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 15000);
-                        if (UnitOfficers[1]) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 15000);
+                        if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 15000);
                         foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.PutHandsUp(6000, UnitOfficers[0]); }
                         GameFiber.Sleep(12000);
 
@@ -95,9 +95,9 @@ namespace Fighting
                         LogTrivial_withAiC($"INFO: choosed callout path");
                         LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
                         //unitOfficers[0].Tasks.GoToWhileAiming(location, suspects[0], 10f, 1f, false, FiringPattern.SingleShot);
-                        //if (unitOfficers[1]) unitOfficers[1].Tasks.GoToWhileAiming(location, suspects[1], 10f, 1f, false, FiringPattern.SingleShot);
+                        //if (UnitOfficers.Count > 1) unitOfficers[1].Tasks.GoToWhileAiming(location, suspects[1], 10f, 1f, false, FiringPattern.SingleShot);
                         UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 18000);
-                        if (UnitOfficers[1]) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
+                        if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
                         foreach (var suspect in Suspects) { 
                             if ( suspect && UnitOfficers[0] ) 
                                 suspect.Tasks.PutHandsUp(120000, UnitOfficers[0]); 
