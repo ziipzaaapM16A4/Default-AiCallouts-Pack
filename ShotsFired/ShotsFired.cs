@@ -109,7 +109,10 @@ namespace ShotsFired
                             OfficersLeaveVehicle(true);
                             foreach (var officer in UnitOfficers) officer.Tasks.TakeCoverFrom(location, 13000);
                             GameFiber.Sleep(4000);                                                                                                                                              //EDIT HERE
-                            UnitCallsForBackup("AAIC-OfficerDown");
+                            if (new Random().Next(0, 2) == 0) 
+                                UnitCallsForBackup("AAIC-OfficerDown");
+                            else
+                                UnitCallsForBackup("AAIC-OfficerUnderFire");
                         } else
                         {
                             GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
