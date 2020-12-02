@@ -16,6 +16,7 @@ namespace MVA
         private bool finished = false;
         private bool senarioTaskAsigned;
         private static Random randomizer = new Random();
+        private bool isSTPRunning;
 
         public override bool Setup()
         {
@@ -24,6 +25,9 @@ namespace MVA
                 SceneInfo = "Motor Vehicle Accident";
                 Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance, AmbientAICallouts.API.Functions.maximumAiCalloutDistance));
                 calloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
+
+                Main.isHeliAssistanceRunning = .IsExternalPluginRunning("SopThePed", new Version("2.2.0.0"));
+                Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - HeliAssistance: " + Main.isHeliAssistanceRunning);
 
                 Vector3 irrelevant;
                 heading = Unit.Heading;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
