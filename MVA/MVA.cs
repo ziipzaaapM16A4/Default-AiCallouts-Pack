@@ -1,4 +1,4 @@
-﻿using AmbientAICallouts.API;
+using AmbientAICallouts.API;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using Rage.Native;
@@ -26,8 +26,8 @@ namespace MVA
                 Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance, AmbientAICallouts.API.Functions.maximumAiCalloutDistance));
                 calloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
 
-                Main.isHeliAssistanceRunning = .IsExternalPluginRunning("SopThePed", new Version("2.2.0.0"));
-                Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - HeliAssistance: " + Main.isHeliAssistanceRunning);
+                isSTPRunning = AmbientAICallouts.ExternalPluginLoader.IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
+                Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
 
                 Vector3 irrelevant;
                 heading = Unit.Heading;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
