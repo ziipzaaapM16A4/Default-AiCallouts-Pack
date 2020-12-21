@@ -51,16 +51,20 @@ namespace EmergencyCall
                 {
                     bool startupFinished = false;
                     GameFiber.StartNew(delegate
-                    { 
-                        while (Game.LocalPlayer.Character.Position.DistanceTo(caller) > 26f && !startupFinished)
+                    {
+                        try
                         {
-                            GameFiber.Sleep(200);
+                            while (Game.LocalPlayer.Character.Position.DistanceTo(caller) > 26f && !startupFinished)
+                            {
+                                GameFiber.Sleep(200);
+                            }
+                            if (!startupFinished)
+                            {
+                                caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
+                                for (int i = 1; i < UnitOfficers.Count; i++) { UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
+                            }
                         }
-                        if (!startupFinished)
-                        {
-                            caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
-                            for (int i = 1; i < UnitOfficers.Count; i++) { UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
-                        }
+                        catch { }
                     });
 
                     OfficersAproach();
