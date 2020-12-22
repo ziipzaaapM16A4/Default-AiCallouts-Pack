@@ -363,7 +363,7 @@ namespace MVA
                         if (Unit.DistanceTo(location) < 9f) { 
                             Unit.Delete(); 
                             foreach (var officer in UnitOfficers) { 
-                                officer.Delete(); 
+                                if (officer) officer.Delete();
                             } 
                         }
                 });
