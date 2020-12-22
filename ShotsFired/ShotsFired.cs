@@ -27,18 +27,27 @@ namespace ShotsFired
                 arrivalDistanceThreshold = 30f;
                 calloutDetailsString = "CRIME_SHOTS_FIRED";
                 SetupSuspects(1);                                                                                        //need to stay 1. more would result that in a callout the rest would flee.
-                GameFiber.StartNew(delegate { 
-                    for(int i= 0; i < 200; i++ )
-                    {
-                        foreach (var suspect in Suspects) { suspect.Tasks.TakeCoverFrom(location, 140000); 
-                            if (suspect.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && suspect.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress)
-                            {
-                                suspect.Tasks.TakeCoverFrom(Game.LocalPlayer.Character.Position, 13000);
+                GameFiber.StartNew(delegate {
+                    try { 
+                        for(int i= 0; i < 200; i++ )
+                        {
+                            foreach (var suspect in Suspects) { 
+                                if (suspect)
+                                {
+                                    suspect.Tasks.TakeCoverFrom(location, 140000); 
+                                    if (suspect.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && suspect.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress)
+                                    {
+                                        suspect.Tasks.TakeCoverFrom(Game.LocalPlayer.Character.Position, 13000);
+                                    }
+                                }
                             }
+                            GameFiber.Yield();
                         }
-                        GameFiber.Yield();
+                    } catch (Exception e)
+                    {
+                        LogTrivial_withAiC("ERROR: in AICallout: AAIC-ShotsFired - get in cover at setup fiber: " + e);
                     }
-                }, "AAIC-ShotsFired- get in cover at setup fiber");
+                }, "AAIC-ShotsFired - get in cover at setup fiber");
 
                 return true;
             }
