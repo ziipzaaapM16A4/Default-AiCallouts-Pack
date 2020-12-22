@@ -1,11 +1,11 @@
-using AmbientAICallouts.API;
-using LSPD_First_Response.Mod.API;
-using Rage;
-using Rage.Native;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rage;
+using System.Reflection;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
+using LSPD_First_Response.Mod.API;
+using AmbientAICallouts.API;
 
 namespace MVA
 {
@@ -23,19 +23,19 @@ namespace MVA
             try
             {
                 SceneInfo = "Motor Vehicle Accident";
-                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance, AmbientAICallouts.API.Functions.maximumAiCalloutDistance));
+                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 calloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
 
-                isSTPRunning = AmbientAICallouts.ExternalPluginLoader.IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
-                Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
+                //isSTPRunning = IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
+                //Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
 
                 Vector3 irrelevant;
                 heading = Unit.Heading;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
 
-                NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
+                Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
 
-                NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
-                NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
+                Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
+                Rage.Native.NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
                 location = roadside;
 
@@ -143,7 +143,7 @@ namespace MVA
                         if (UnitOfficers[i].Position.DistanceTo(SuspectsVehicles[1].GetOffsetPosition(new Vector3(2f + i, 0f, 0f))) >= 3f)
                         {
                             UnitOfficers[i].Position = SuspectsVehicles[1].GetOffsetPosition(new Vector3(2f + i, 0f, 0f));
-                            NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[i], Suspects[i], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                            Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[i], Suspects[i], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
                         }
 
                     //Talk To The Suspects
@@ -221,8 +221,8 @@ namespace MVA
                                 var officerAtCopCar = UnitOfficers[0].Tasks.FollowNavigationMeshToPosition(Unit.GetOffsetPosition(new Vector3(2.7f, 0f, 0f)), heading + 0f, 0.75f);
                                 UnitOfficers[1].Tasks.FollowNavigationMeshToPosition(Unit.GetOffsetPosition(new Vector3(2.2f, 1.3f, 0f)), heading + 180f, 0.75f).WaitForCompletion();
                                 while (officerAtCopCar.IsActive) { GameFiber.Sleep(300); }
-                                NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[0], UnitOfficers[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                                NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[1], UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                                Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[0], UnitOfficers[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                                Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[1], UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
                                 GameFiber.Sleep(16000);
                             }
                             if (cone0) cone0.Delete();
@@ -763,8 +763,8 @@ namespace MVA
                 var officerAtCopCar = UnitOfficers[0].Tasks.FollowNavigationMeshToPosition(Unit.GetOffsetPosition(new Vector3(2.7f, 0f, 0f)), heading + 0f, 0.75f);
                 UnitOfficers[1].Tasks.FollowNavigationMeshToPosition(Unit.GetOffsetPosition(new Vector3(2.2f, 1.3f, 0f)), heading + 180f, 0.75f).WaitForCompletion();
                 while (officerAtCopCar.IsActive) { GameFiber.Sleep(300); }
-                NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[0], UnitOfficers[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[1], UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[0], UnitOfficers[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(UnitOfficers[1], UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
                 GameFiber.Sleep(16000);
             }
             //if (cone0) cone0.Delete();
@@ -773,6 +773,17 @@ namespace MVA
             finished = true;
             EnterAndDismiss();
         }
-
+        private static bool IsExternalPluginRunning(string plugin, Version minimumVersion)
+        {
+            foreach (Assembly assembly in LSPD_First_Response.Mod.API.Functions.GetAllUserPlugins())
+            {
+                AssemblyName name = assembly.GetName();
+                if (name.Name.Equals(plugin, StringComparison.OrdinalIgnoreCase))
+                {
+                    return (name.Version.CompareTo(minimumVersion) >= 0);
+                }
+            }
+            return false;
+        }
     }
 }

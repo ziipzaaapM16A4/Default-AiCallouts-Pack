@@ -52,7 +52,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AmbientAICallouts">
+    <Reference Include="AmbientAICallouts, Version=0.9.5.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AmbientAICallouts\bin\x64\Debug\AmbientAICallouts.dll</HintPath>
     </Reference>
     <Reference Include="LSPD First Response">
