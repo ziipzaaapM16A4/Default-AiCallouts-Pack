@@ -26,10 +26,10 @@ namespace ShotsFired
                 location = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
                 arrivalDistanceThreshold = 30f;
                 calloutDetailsString = "CRIME_SHOTS_FIRED";
-                SetupSuspects(1);                                                                                        //need to stay 1. more would result that in a callout the rest would flee.
+                SetupSuspects(1);  //need to stay 1. more would result that in a callout the rest would flee.
                 GameFiber.StartNew(delegate {
                     try { 
-                        for(int i= 0; i < 200; i++ )
+                        for(int i= 0; i < 50; i++ )
                         {
                             foreach (var suspect in Suspects) { 
                                 if (suspect)
