@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Rage;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using AmbientAICallouts.API;
+using System.Runtime.CompilerServices;
+using LSPD_First_Response.Mod.API;
 
 namespace Fighting
 {
@@ -17,7 +19,7 @@ namespace Fighting
             try
             {
                 SceneInfo = "Fighting";
-                location = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                location = World.GetNextPositionOnStreet(Unit.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance, AmbientAICallouts.API.Functions.maximumAiCalloutDistance));
                 arrivalDistanceThreshold = 14f;
                 calloutDetailsString = "CRIME_ASSAULT";
                 SetupSuspects(2);
@@ -57,12 +59,13 @@ namespace Fighting
                     GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 0);
                     Unit.IsSirenSilent = true;
                     Unit.TopSpeed = 12f;
+                    OfficerReportOnScene();
 
                     GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
                     Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
                     GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
                     OfficersLeaveVehicle(true);
-                    
+
                     startLoosingHealth = true;
 
                     LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
@@ -76,18 +79,117 @@ namespace Fighting
                         if (UnitOfficers.Count > 1 && Suspects[1]) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[1], Suspects[1], 5f, 1f, false, FiringPattern.SingleShot); }
                         else if (UnitOfficers.Count > 1) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot); }
                         GameFiber.WaitWhile(() => taskGoWhileAiming0.IsActive, 10000);
-                        UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 15000);
-                        if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 15000);
+                        UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 30000);
+                        if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 30000);
                         foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.PutHandsUp(6000, UnitOfficers[0]); }
-                        GameFiber.Sleep(12000);
+                        GameFiber.Sleep(9000);
 
-                        LogTrivialDebug_withAiC($"DEBUG: Flee");
-                        foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.Flee(UnitOfficers[0], 100f, 30000); }
-                        GameFiber.Sleep(5100);
-                        foreach (var officer in UnitOfficers) { if (officer) officer.Tasks.Clear(); }
+                        LogTrivialDebug_withAiC($"DEBUG: Flee or Stay");
+                        List<bool> underArrest = new List<bool>();
+                        bool someoneStopped = false;
 
-                        EnterAndDismiss();
-                        foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.Flee(UnitOfficers[0], 100f, 30000); } //hier nochmal weil EnterAndDismiss() die Tasks cleared durch den Dismiss
+
+                        foreach (var suspect in Suspects)
+                        {
+                            if (suspect)
+                            {
+                                LSPDFR_Functions.SetPedResistanceChance(suspect, 0.35f);
+                                if (LSPDFR_Functions.IsPedGettingArrested(suspect) || LSPDFR_Functions.IsPedArrested(suspect) || LSPDFR_Functions.IsPedStoppedByPlayer(suspect))
+                                {
+                                    someoneStopped = true;
+                                    underArrest.Add(true);
+
+                                }
+                                else
+                                {
+                                    underArrest.Add(false);
+
+                                }
+                            }
+                            else
+                            {
+                                underArrest.Add(false);
+                            }
+                        }
+
+                        LogTrivialDebug_withAiC($"DEBUG: SomebodyStopped?");
+                        if (someoneStopped)
+                        {
+                            bool finished = false;
+
+                            List<bool> gettingArrested = new List<bool>();
+                            while (!finished)
+                            {
+                                GameFiber.Sleep(500);
+
+                                foreach (var suspect in Suspects)
+                                {
+                                    if (suspect)
+                                    {
+                                        if (LSPDFR_Functions.IsPedGettingArrested(suspect) || LSPDFR_Functions.IsPedStoppedByPlayer(suspect))
+                                        {
+                                            gettingArrested.Add(true);
+
+                                        }
+                                        else
+                                        {
+                                            gettingArrested.Add(false);
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        gettingArrested.Add(false);
+                                    }
+                                }
+
+                                if (gettingArrested.Any(ofc => ofc.Equals(false))) finished = true;
+                            }
+
+                            foreach (var officer in UnitOfficers) { if (officer) officer.Tasks.Clear(); }
+                            EnterAndDismiss(false);
+                        }
+                        else
+                        {
+                            if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
+                            else if (UnitOfficers[0]) { UnitOfficers[0].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
+                            foreach (var officer in UnitOfficers) { if (officer) officer.Tasks.Clear(); }
+                            GameFiber.Sleep(4000);
+
+                            underArrest = new List<bool>();
+                            someoneStopped = false;
+                            foreach (var suspect in Suspects)
+                            {
+                                if (suspect)
+                                {
+                                    if (LSPDFR_Functions.IsPedGettingArrested(suspect) || LSPDFR_Functions.IsPedArrested(suspect) || LSPDFR_Functions.IsPedStoppedByPlayer(suspect))
+                                    {
+                                        someoneStopped = true;
+                                        underArrest.Add(true);
+                                    }
+                                    else
+                                    {
+                                        underArrest.Add(false);
+
+                                    }
+                                }
+                                else
+                                {
+                                    underArrest.Add(false);
+                                }
+                            }
+
+
+                            if (!someoneStopped) 
+                                foreach (var suspect in Suspects) { 
+                                    if (suspect) suspect.Tasks.Flee(UnitOfficers[0], 100f, 30000); 
+                                    suspect.IsPersistent = false; 
+                                }
+
+                            GameFiber.Sleep(5100);
+                            EnterAndDismiss(false);
+                        }
+
                         LogTrivial_withAiC($"INFO: Call Finished");
                     }
                     else                                        //Callout
@@ -98,9 +200,10 @@ namespace Fighting
                         //if (UnitOfficers.Count > 1) unitOfficers[1].Tasks.GoToWhileAiming(location, suspects[1], 10f, 1f, false, FiringPattern.SingleShot);
                         UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 18000);
                         if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
-                        foreach (var suspect in Suspects) { 
-                            if ( suspect && UnitOfficers[0] ) 
-                                suspect.Tasks.PutHandsUp(120000, UnitOfficers[0]); 
+                        foreach (var suspect in Suspects)
+                        {
+                            if (suspect && UnitOfficers[0])
+                                suspect.Tasks.PutHandsUp(120000, UnitOfficers[0]);
                         }
 
                         switch (new Random().Next(0, 5))
@@ -121,6 +224,11 @@ namespace Fighting
 
                 }
                 return true;
+            }
+            catch (System.Threading.ThreadAbortException e)
+            {
+                LogTrivial_withAiC("WARNING: in AICallout object: At Process(): ThreadAbortException ---> LSPDFR has probably been Ended. Closing Fibers now..." + e);
+                return false;
             }
             catch (Exception e)
             {
