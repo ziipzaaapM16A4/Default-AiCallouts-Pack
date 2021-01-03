@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -151,7 +151,7 @@ namespace Fighting
                         }
                         else
                         {
-                            if (UnitOfficers[1]) { UnitOfficers[1].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
+                            if (UnitOfficers.Count != 1) { if (UnitOfficers[1]) UnitOfficers[1].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
                             else if (UnitOfficers[0]) { UnitOfficers[0].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
                             foreach (var officer in UnitOfficers) { if (officer) officer.Tasks.Clear(); }
                             GameFiber.Sleep(4000);
