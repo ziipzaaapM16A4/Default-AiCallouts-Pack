@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Rage;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
+using Functions = AmbientAICallouts.API.Functions;
 using AmbientAICallouts.API;
 using System.Runtime.CompilerServices;
 using LSPD_First_Response.Mod.API;
@@ -19,7 +20,16 @@ namespace Fighting
             try
             {
                 SceneInfo = "Fighting";
-                location = World.GetNextPositionOnStreet(Unit.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance, AmbientAICallouts.API.Functions.maximumAiCalloutDistance));
+                bool posFound = false;
+                int i = 0;
+                while (!posFound && i < 20)
+                {
+                    location = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    if (Unit.Position.DistanceTo(location) > Functions.minimumAiCalloutDistance
+                     && Unit.Position.DistanceTo(location) < Functions.maximumAiCalloutDistance)
+                        posFound = true;
+                    i++;
+                }
                 arrivalDistanceThreshold = 14f;
                 calloutDetailsString = "CRIME_ASSAULT";
                 SetupSuspects(2);

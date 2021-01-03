@@ -17,18 +17,30 @@ namespace EmergencyCall
             try
             {
                 SceneInfo = "Civilian in need of assistance";
-                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
-
-                Vector3 irrelevant;
-                float heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
-
-                NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
-
-                NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
-                NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
-
-                location = roadside;
                 calloutDetailsString = "CIV_ASSISTANCE";
+
+                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                bool posFound = false;
+                int trys = 0;
+                while (!posFound && trys < 20)
+                {
+                    roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                    Vector3 irrelevant;
+                    float heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
+
+                    NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
+
+                    NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
+                    NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
+
+                    location = roadside;
+
+
+                    if (Unit.Position.DistanceTo(roadside) > Functions.minimumAiCalloutDistance
+                     && Unit.Position.DistanceTo(roadside) < Functions.maximumAiCalloutDistance)
+                        posFound = true;
+                    trys++;
+                }
 
                 caller = new Ped(location);
                 return true;

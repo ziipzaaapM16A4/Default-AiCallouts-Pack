@@ -23,7 +23,16 @@ namespace ShotsFired
             try
             {
                 SceneInfo = "Shots Fired";
-                location = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                bool posFound = false;
+                int trys = 0;
+                while (!posFound && trys < 20)
+                {
+                    location = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    if (Unit.Position.DistanceTo(location) > Functions.minimumAiCalloutDistance 
+                     && Unit.Position.DistanceTo(location) < Functions.maximumAiCalloutDistance) 
+                        posFound = true;
+                    trys++;
+                }
                 arrivalDistanceThreshold = 30f;
                 calloutDetailsString = "CRIME_SHOTS_FIRED";
                 SetupSuspects(1);  //need to stay 1. more would result that in a callout the rest would flee.

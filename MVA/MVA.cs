@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Rage;
 using System.Reflection;
-using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using LSPD_First_Response.Mod.API;
+using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using AmbientAICallouts.API;
+using Functions = AmbientAICallouts.API.Functions;
 
 namespace MVA
 {
@@ -23,21 +24,34 @@ namespace MVA
             try
             {
                 SceneInfo = "Motor Vehicle Accident";
-                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 calloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
+                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                bool posFound = false;
+                int trys = 0;
+                while (!posFound && trys < 20)
+                {
+                    roadside = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
 
-                //isSTPRunning = IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
-                //Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
 
-                Vector3 irrelevant;
-                heading = Unit.Heading;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
+                    //isSTPRunning = IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
+                    //Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
 
-                Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
+                    Vector3 irrelevant;
+                    heading = Unit.Heading;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
 
-                Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
-                Rage.Native.NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
+                    Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
 
-                location = roadside;
+                    Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
+                    Rage.Native.NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
+
+                    location = roadside;
+
+
+                    if (Unit.Position.DistanceTo(roadside) > Functions.minimumAiCalloutDistance
+                     && Unit.Position.DistanceTo(roadside) < Functions.maximumAiCalloutDistance)
+                        posFound = true;
+                    trys++;
+                }
 
                 //spawn 2 vehicles at the side of the road
                 AmbientAICallouts.API.Functions.CleanArea(roadside, 25f);
