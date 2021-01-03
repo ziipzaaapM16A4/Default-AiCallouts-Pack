@@ -50,6 +50,7 @@ namespace Fighting
 
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
@@ -235,11 +236,7 @@ namespace Fighting
                 }
                 return true;
             }
-            catch (System.Threading.ThreadAbortException e)
-            {
-                LogTrivial_withAiC("WARNING: in AICallout object: At Process(): ThreadAbortException ---> LSPDFR has probably been Ended. Closing Fibers now..." + e);
-                return false;
-            }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
@@ -252,6 +249,7 @@ namespace Fighting
             {
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC( "ERROR: in AICallout object: At End():" + e);

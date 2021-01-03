@@ -105,11 +105,13 @@ namespace MVA
                             GameFiber.Sleep(2000);
                         }
                     }
+                    catch (System.Threading.ThreadAbortException) {}
                     catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
                 }, $"[AmbientAICallouts] [AiCallout MVA] Animation maker Fiber");
 
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: " + e);
@@ -218,6 +220,7 @@ namespace MVA
                                     UnitOfficers[0].Tasks.Clear();
                                     notebookAnimationFinished = true;
                                 }
+                                catch (System.Threading.ThreadAbortException) { }
                                 catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
                             }, $"[AmbientAICallouts] [AiCallout MVA] Animation maker Fiber");
 
@@ -324,6 +327,7 @@ namespace MVA
                                             GameFiber.Sleep(31000);
                                         }
                                     }
+                                    catch (System.Threading.ThreadAbortException) { }
                                     catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
                                 }, $"[AmbientAICallouts] [AiCallout MVA] Animation maker Fiber");
                             }
@@ -338,6 +342,7 @@ namespace MVA
 
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: " + e);
@@ -383,6 +388,7 @@ namespace MVA
                 });
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: " + e);

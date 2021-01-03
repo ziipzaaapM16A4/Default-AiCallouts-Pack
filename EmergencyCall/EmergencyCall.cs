@@ -45,6 +45,7 @@ namespace EmergencyCall
                 caller = new Ped(location);
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
@@ -136,6 +137,7 @@ namespace EmergencyCall
                 }
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
@@ -171,6 +173,7 @@ namespace EmergencyCall
                 EnterAndDismiss();
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At End(): " + e);

@@ -20,6 +20,7 @@ namespace PrankCall
                 calloutDetailsString = "CIV_ASSISTANCE";
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
@@ -62,6 +63,7 @@ namespace PrankCall
                 }
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
@@ -75,6 +77,7 @@ namespace PrankCall
                 EnterAndDismiss();
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At End(): " + e);

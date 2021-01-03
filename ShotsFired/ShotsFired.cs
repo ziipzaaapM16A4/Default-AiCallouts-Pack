@@ -52,7 +52,9 @@ namespace ShotsFired
                             }
                             GameFiber.Yield();
                         }
-                    } catch (Exception e)
+                    }
+                    catch (System.Threading.ThreadAbortException) { }
+                    catch (Exception e)
                     {
                         LogTrivial_withAiC("ERROR: in AICallout: AAIC-ShotsFired - get in cover at setup fiber: " + e);
                     }
@@ -60,6 +62,7 @@ namespace ShotsFired
 
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
@@ -162,6 +165,7 @@ namespace ShotsFired
 
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
@@ -178,6 +182,7 @@ namespace ShotsFired
 
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At End(): " + e);

@@ -67,6 +67,7 @@ namespace OutstandingWarrant
                     return false; 
                 }
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
@@ -116,6 +117,7 @@ namespace OutstandingWarrant
                                 GameFiber.Sleep(2000);
                             }
                         }
+                        catch (System.Threading.ThreadAbortException) { }
                         catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
                     }, $"[AmbientAICallouts] [AiCallout] Shooting - Animation maker Fiber");
 
@@ -316,6 +318,7 @@ namespace OutstandingWarrant
                 }
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
@@ -329,6 +332,7 @@ namespace OutstandingWarrant
                 ///doStuff
                 return true;
             }
+            catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At End(): " + e);
