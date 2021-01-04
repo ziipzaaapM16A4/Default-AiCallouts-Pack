@@ -19,12 +19,12 @@ namespace EmergencyCall
                 SceneInfo = "Civilian in need of assistance";
                 calloutDetailsString = "CIV_ASSISTANCE";
 
-                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
                 int trys = 0;
                 while (!posFound && trys < 50)
                 {
-                    roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                    roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                     Vector3 irrelevant;
                     float heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
 
@@ -36,8 +36,8 @@ namespace EmergencyCall
                     location = roadside;
 
 
-                    if (Unit.Position.DistanceTo(roadside) > Functions.minimumAiCalloutDistance
-                     && Unit.Position.DistanceTo(roadside) < Functions.maximumAiCalloutDistance)
+                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }

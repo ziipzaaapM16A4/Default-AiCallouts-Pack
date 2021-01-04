@@ -25,12 +25,12 @@ namespace MVA
             {
                 SceneInfo = "Motor Vehicle Accident";
                 calloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
-                Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
                 int trys = 0;
-                while (!posFound && trys < 50)
+                while (!posFound && trys < 30)
                 {
-                    roadside = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
 
 
                     //isSTPRunning = IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
@@ -47,8 +47,8 @@ namespace MVA
                     location = roadside;
 
 
-                    if (Unit.Position.DistanceTo(roadside) > Functions.minimumAiCalloutDistance
-                     && Unit.Position.DistanceTo(roadside) < Functions.maximumAiCalloutDistance)
+                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }

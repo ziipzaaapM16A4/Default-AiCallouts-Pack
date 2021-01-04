@@ -25,11 +25,11 @@ namespace ShotsFired
                 SceneInfo = "Shots Fired";
                 bool posFound = false;
                 int trys = 0;
-                while (!posFound && trys < 50)
+                while (!posFound && trys < 20)
                 {
-                    location = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
-                    if (Unit.Position.DistanceTo(location) > Functions.minimumAiCalloutDistance 
-                     && Unit.Position.DistanceTo(location) < Functions.maximumAiCalloutDistance) 
+                    location = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }
