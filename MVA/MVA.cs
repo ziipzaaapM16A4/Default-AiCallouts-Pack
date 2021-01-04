@@ -296,36 +296,41 @@ namespace MVA
                                 {
                                     try
                                     {
-                                        if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
-                                        {
-                                            GameFiber.Sleep(4000);
-                                        }
+                                        if (UnitOfficers[0])
+                                            if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
+                                            {
+                                                GameFiber.Sleep(4000);
+                                            }
 
-                                        if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
-                                        {
-                                            var watchClock = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_b", 2f, AnimationFlags.None);
-                                            GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
-                                        }
+                                        if (UnitOfficers[0])
+                                            if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
+                                            {
+                                                var watchClock = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_b", 2f, AnimationFlags.None);
+                                                GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
+                                            }
 
-                                        if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
-                                        {
-                                            UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
-                                            GameFiber.Sleep(2500);
-                                            if (UnitOfficers.Count != 1) UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
-                                            GameFiber.Sleep(200);
-                                        }
+                                        if (UnitOfficers[0])
+                                            if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
+                                            {
+                                                UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                                GameFiber.Sleep(2500);
+                                                if (UnitOfficers.Count != 1) UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
+                                                GameFiber.Sleep(200);
+                                            }
 
-                                        if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
-                                        {
-                                            var looksAround = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_c", 2f, AnimationFlags.None);
-                                            GameFiber.SleepUntil(() => looksAround.CurrentTimeRatio > 0.92f, 10000);
-                                        }
+                                        if (UnitOfficers[0])
+                                            if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
+                                            {
+                                                var looksAround = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_c", 2f, AnimationFlags.None);
+                                                GameFiber.SleepUntil(() => looksAround.CurrentTimeRatio > 0.92f, 10000);
+                                            }
 
-                                        if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
-                                        {
-                                            UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
-                                            GameFiber.Sleep(31000);
-                                        }
+                                        if (UnitOfficers[0])
+                                            if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
+                                            {
+                                                UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                                GameFiber.Sleep(31000);
+                                            }
                                     }
                                     catch (System.Threading.ThreadAbortException) { }
                                     catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
