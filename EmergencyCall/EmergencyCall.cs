@@ -22,7 +22,7 @@ namespace EmergencyCall
                 Vector3 roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
                 bool posFound = false;
                 int trys = 0;
-                while (!posFound && trys < 20)
+                while (!posFound && trys < 50)
                 {
                     roadside = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
                     Vector3 irrelevant;

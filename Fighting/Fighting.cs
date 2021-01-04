@@ -22,7 +22,7 @@ namespace Fighting
                 SceneInfo = "Fighting";
                 bool posFound = false;
                 int i = 0;
-                while (!posFound && i < 20)
+                while (!posFound && i < 50)
                 {
                     location = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                     if (Unit.Position.DistanceTo(location) > Functions.minimumAiCalloutDistance

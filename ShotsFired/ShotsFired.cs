@@ -25,7 +25,7 @@ namespace ShotsFired
                 SceneInfo = "Shots Fired";
                 bool posFound = false;
                 int trys = 0;
-                while (!posFound && trys < 20)
+                while (!posFound && trys < 50)
                 {
                     location = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                     if (Unit.Position.DistanceTo(location) > Functions.minimumAiCalloutDistance 
