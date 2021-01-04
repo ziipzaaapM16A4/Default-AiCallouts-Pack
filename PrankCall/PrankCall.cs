@@ -16,7 +16,16 @@ namespace PrankCall
             try
             {
                 SceneInfo = "Civilian in need of assistance";
-                location = World.GetNextPositionOnStreet(Unit.Position.Around2D(Functions.minimumAiCalloutDistance, Functions.maximumAiCalloutDistance));
+                bool posFound = false;
+                int i = 0;
+                while (!posFound && i < 50)
+                {
+                    location = World.GetNextPositionOnStreet(Unit.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    if (Unit.Position.DistanceTo(location) > Functions.minimumAiCalloutDistance
+                     && Unit.Position.DistanceTo(location) < Functions.maximumAiCalloutDistance)
+                        posFound = true;
+                    i++;
+                }
                 calloutDetailsString = "CIV_ASSISTANCE";
                 return true;
             }
