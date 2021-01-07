@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PrankCall")]
-[assembly: AssemblyCopyright("Copyright © ziipzaaapM16A4 2020")]
+[assembly: AssemblyCopyright("Copyright © ziipzaaapM16A4 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
