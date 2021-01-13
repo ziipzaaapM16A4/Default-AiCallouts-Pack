@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,13 +11,15 @@ namespace EmergencyCall
 {
     public class EmergencyCall : AiCallout
     {
-        Ped caller;
+        private Ped caller;
+        private Random rand = new Random();
         public override bool Setup()
         {
             try
             {
                 SceneInfo = "Civilian in need of assistance";
                 calloutDetailsString = "CIV_ASSISTANCE";
+                if (rand.Next(0, 2) == 0) { responseType = EResponseType.Code3; } else { responseType = EResponseType.Code2; }
 
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
