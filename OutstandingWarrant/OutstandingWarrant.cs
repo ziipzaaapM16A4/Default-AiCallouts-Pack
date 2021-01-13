@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -119,7 +119,7 @@ namespace OutstandingWarrant
                         }
                         catch (System.Threading.ThreadAbortException) { }
                         catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
-                    }, $"[AmbientAICallouts] [AiCallout] Shooting - Animation maker Fiber");
+                    }, $"[AmbientAICallouts] [AiCallout] OutstandingWarrant - Animation maker Fiber");
 
                     GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 10f, 30000);
                     UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "COP_ARRIVAL_ANNOUNCE_MEGAPHONE", 0, SpeechModifier.Force);
