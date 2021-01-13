@@ -2,6 +2,7 @@ using System;
 using System.Data.Common;
 using System.ComponentModel;
 using Rage;
+using Rage.Native;
 using AmbientAICallouts;
 using AmbientAICallouts.API;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
