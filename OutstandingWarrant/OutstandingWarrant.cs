@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -103,18 +103,32 @@ namespace OutstandingWarrant
                             List<string> idleAnims = new List<string>() { "idle_a", "idle_b", "idle_c" };
                             while (Suspects[0])
                             {                                                                                   //sollange call läuft //Workaround
-                                while (Suspects[0].IsAlive && !LSPDFR_Functions.IsPedArrested(Suspects[0]))
+                                if (Suspects[0].IsAlive && !LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedStoppedByPlayer(Suspects[0]))
                                 {
-                                    while (!senarioTaskAsigned)
+                                    if (!senarioTaskAsigned)
                                     {
                                         if (Suspects[0].Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && Suspects[0].Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing) 
                                             if (Suspects[0] && !LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedBeingCuffed(Suspects[0]) && !LSPDFR_Functions.IsPedBeingFrisked(Suspects[0]) && !LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]) && !LSPDFR_Functions.IsPedInPursuit(Suspects[0])) 
                                                 Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), idleAnims[new Random().Next(1, idleAnims.Count)], 1f, AnimationFlags.None); //} catch (Exception e) { LogTrivialDebug_withAiC()($"[AmbientAICallouts] [Fiber {fiberNumber}]  WARNING: Animation failed: " + e); }
-                                        GameFiber.Sleep(8500);
                                     }
-                                    GameFiber.Sleep(2000);
                                 }
-                                GameFiber.Sleep(2000);
+
+                                if (!LSPDFR_Functions.IsPedInPursuit(Suspects[0]))
+                                {
+                                    var pedsAroundSuspect = Suspects[0].GetNearbyPeds(8);
+                                    foreach (Ped ped in pedsAroundSuspect)
+                                    {
+                                        if (ped)
+                                        {
+                                            if ( !ped.IsPlayer && !LSPDFR_Functions.IsPedACop(ped) )
+                                            {
+                                                try { ped.Tasks.Flee(Suspects[0], 60f, 50000); } catch { }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                GameFiber.Sleep(8500);
                             }
                         }
                         catch (System.Threading.ThreadAbortException) { }
