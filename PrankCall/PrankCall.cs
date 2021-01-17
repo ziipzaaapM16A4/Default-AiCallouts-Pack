@@ -56,7 +56,7 @@ namespace PrankCall
                     OfficersLeaveVehicle(true);
 
                     LogTrivialDebug_withAiC($"DEBUG: Go Look Around");
-                    string[] anims = { "wait_idle_a", "wait_idle_a", "wait_idle_a" };
+                    string[] anims = { "wait_idle_a", "wait_idle_b", "wait_idle_c" };
                     foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
                     GameFiber.Sleep(12000);                                                                                                   //Static behavior. bad way                                   
                     for (int i = 0; i < UnitOfficers.Count; i++)
