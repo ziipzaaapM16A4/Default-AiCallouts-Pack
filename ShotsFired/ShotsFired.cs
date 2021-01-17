@@ -17,6 +17,7 @@ namespace ShotsFired
     public class ShotsFired : AiCallout
     {
         bool shootWhileDriving = true;//(new Random().Next(2) == 0);
+        Random randomizer = new Random();
         public override bool Setup()
         {
             //Code for setting the scene. return true when Succesfull. 
@@ -134,14 +135,33 @@ namespace ShotsFired
 
                         if (IsAiTakingCare())
                         {
+                            //---------------------------------------------------- Temporary fix -----------------------------------------------------------
+                            if (Suspects[0]) Suspects[0].Delete();
+                            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 0);
+                            Unit.IsSirenSilent = true;
+                            Unit.TopSpeed = 12f;
+
                             GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                            Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
+                            GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
                             OfficersLeaveVehicle(true);
 
-                            //aproach ped
+                            LogTrivialDebug_withAiC($"DEBUG: Go Look Around");
+                            string[] anims = { "wait_idle_a", "wait_idle_b", "wait_idle_c" };
+                            foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
+                            GameFiber.Sleep(12000);                                                                                                   //Static behavior. bad way                                   
+                            for (int i = 0; i < UnitOfficers.Count; i++)
+                            {
+                                if (UnitOfficers[i]) UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("missmic_4premierejimwaitbef_prem"), anims[randomizer.Next(0, anims.Length)], 1f, AnimationFlags.RagdollOnCollision);
+                                GameFiber.Sleep(2000);
+                            }
+                            GameFiber.SleepWhile(() => UnitOfficers[0].Tasks.CurrentTaskStatus == Rage.TaskStatus.InProgress || UnitOfficers[0].Tasks.CurrentTaskStatus == Rage.TaskStatus.Preparing, 7000);
 
-                            //which officer is valid. which one should do the arrest
-                            //LSPDFR_Functions.StartPedArrestPed();
-
+                            LogTrivialDebug_withAiC($"DEBUG: PrankCallSpeech");
+                            UnitOfficers[0].PlayAmbientSpeech("S_M_Y_FIREMAN_01_WHITE_FULL_01", "EMERG_PRANK_CALL", 0, SpeechModifier.Force);                                                                       //Not finished needs speech
+                            GameFiber.Sleep(4000);
+                            EnterAndDismiss(false);
+                            //---------------------------------------------------- Temporary fix End---------------------------------------------------------
                         }
                         else
                         {
