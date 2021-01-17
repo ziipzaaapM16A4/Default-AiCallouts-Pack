@@ -100,48 +100,52 @@ namespace ShotsFired
                 {
                     GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 50f && Game.LocalPlayer.Character.Position.DistanceTo(location) >= 50f, 0);
 
-
-                    if (IsAiTakingCare()) {
-                        GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
-                        OfficersLeaveVehicle(true);
-
-                        //aproach ped
-
-                        //which officer is valid. which one should do the arrest
-                        //LSPDFR_Functions.StartPedArrestPed();
-
-                    } else {
-
-                        if (playerRespondingInAdditon)
+                    if (playerRespondingInAdditon)
+                    {
+                        var firstShotDurration = 3000;
+                        var pursuit = LSPDFR_Functions.CreatePursuit();
+                        foreach (var suspect in Suspects)
                         {
-                            var firstShotDurration = 3000;
-                            var pursuit = LSPDFR_Functions.CreatePursuit();
-                            foreach (var suspect in Suspects)
-                            {
-                                if (new Random().Next(2) == 0) { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
-                                LSPDFR_Functions.AddPedToPursuit(pursuit, suspect);
+                            if (new Random().Next(2) == 0) { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
+                            LSPDFR_Functions.AddPedToPursuit(pursuit, suspect);
 
-                                LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, true);
-                                suspect.Tasks.FireWeaponAt(Unit, firstShotDurration + 2000, FiringPattern.BurstFire);
-                            }
+                            LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, true);
+                            suspect.Tasks.FireWeaponAt(Unit, firstShotDurration + 2000, FiringPattern.BurstFire);
+                        }
 
-                            foreach (var cop in UnitOfficers)
-                            {
-                                LSPDFR_Functions.AddCopToPursuit(pursuit, cop);
-                            }
+                        foreach (var cop in UnitOfficers)
+                        {
+                            LSPDFR_Functions.AddCopToPursuit(pursuit, cop);
+                        }
 
-                            GameFiber.Sleep(firstShotDurration);
+                        GameFiber.Sleep(firstShotDurration);
 
-                            foreach (var suspect in Suspects)
-                            {
-                                LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, false);
-                                var attributes = LSPDFR_Functions.GetPedPursuitAttributes(suspect);
-                                attributes.AverageFightTime = 1;
-                            }
-                            LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                        foreach (var suspect in Suspects)
+                        {
+                            LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, false);
+                            var attributes = LSPDFR_Functions.GetPedPursuitAttributes(suspect);
+                            attributes.AverageFightTime = 1;
+                        }
+                        LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                        while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f) { GameFiber.Sleep(4000); }
+                    }
+                    else
+                    {
+
+                        if (IsAiTakingCare())
+                        {
+                            GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                            OfficersLeaveVehicle(true);
+
+                            //aproach ped
+
+                            //which officer is valid. which one should do the arrest
+                            //LSPDFR_Functions.StartPedArrestPed();
+
                         }
                         else
                         {
+
                             Unit.IsSirenSilent = true;
                             Unit.TopSpeed = 10f;
 
@@ -186,10 +190,9 @@ namespace ShotsFired
                                         break;
                                 }
                             }
+                            while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f) { GameFiber.Sleep(4000); }
                         }
                     }
-
-                    while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f) { GameFiber.Sleep(4000); }
                 }
 
                 return true;
