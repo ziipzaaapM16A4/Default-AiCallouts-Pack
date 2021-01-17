@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Common;
 using System.ComponentModel;
 using Rage;
@@ -6,6 +6,7 @@ using Rage.Native;
 using AmbientAICallouts;
 using AmbientAICallouts.API;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
+using System.Linq;
 
 namespace ShotsFired
 {
@@ -100,82 +101,95 @@ namespace ShotsFired
                     GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 50f && Game.LocalPlayer.Character.Position.DistanceTo(location) >= 50f, 0);
 
 
-                    if (playerRespondingInAdditon)
-                    {
-                        var firstShotDurration = 3000;
-                        var pursuit = LSPDFR_Functions.CreatePursuit();
-                        foreach (var suspect in Suspects)
+                    if (IsAiTakingCare()) {
+                        GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                        OfficersLeaveVehicle(true);
+
+                        //aproach ped
+
+                        //which officer is valid. which one should do the arrest
+                        //LSPDFR_Functions.StartPedArrestPed();
+
+                    } else {
+
+                        if (playerRespondingInAdditon)
                         {
-                            if (new Random().Next(2) == 0) { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
-                            LSPDFR_Functions.AddPedToPursuit(pursuit, suspect);
-
-                            LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, true);
-                            suspect.Tasks.FireWeaponAt(Unit, firstShotDurration + 2000, FiringPattern.BurstFire);
-                        }
-
-                        foreach (var cop in UnitOfficers)
-                        {
-                            LSPDFR_Functions.AddCopToPursuit(pursuit, cop);
-                        }
-
-                        GameFiber.Sleep(firstShotDurration);
-
-                        foreach (var suspect in Suspects)
-                        {
-                            LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, false);
-                            var attributes = LSPDFR_Functions.GetPedPursuitAttributes(suspect);
-                            attributes.AverageFightTime = 1;
-                        }
-                        LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                    } 
-                    else
-                    {
-                        Unit.IsSirenSilent = true;
-                        Unit.TopSpeed = 10f;
-
-                        if (shootWhileDriving)
-                        {
-                            GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 20f /* && Unit.Speed <= 1*/, 30000);
-                            //simple system to give tasks
-                            foreach (var suspect in Suspects) 
-                                suspect.Tasks.FireWeaponAt(Unit.Passengers[0], 15000, FiringPattern.BurstFire);
-                            GameFiber.Sleep(800);                                                                                                                                              //EDIT HERE
-                            Unit.Driver.Tasks.PerformDrivingManeuver( new Random().Next(2) == 0? VehicleManeuver.HandBrakeLeft : VehicleManeuver.HandBrakeRight );
-                            GameFiber.SleepUntil(() => Unit.Speed <= 2, 4000);
-                            OfficersLeaveVehicle(true);
-                            foreach (var officer in UnitOfficers) officer.Tasks.TakeCoverFrom(location, 13000);
-                            GameFiber.Sleep(4000);                                                                                                                                              //EDIT HERE
-                            if (new Random().Next(0, 2) == 0) 
-                                UnitCallsForBackup("AAIC-OfficerDown");
-                            else
-                                UnitCallsForBackup("AAIC-OfficerUnderFire");
-                        } else
-                        {
-                            GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
-                            OfficersLeaveVehicle(true);
-
-                            foreach (var officer in UnitOfficers)
+                            var firstShotDurration = 3000;
+                            var pursuit = LSPDFR_Functions.CreatePursuit();
+                            foreach (var suspect in Suspects)
                             {
-                                officer.Tasks.FollowNavigationMeshToPosition(location, MathHelper.ConvertDirectionToHeading(location), 1f);
+                                if (new Random().Next(2) == 0) { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
+                                LSPDFR_Functions.AddPedToPursuit(pursuit, suspect);
+
+                                LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, true);
+                                suspect.Tasks.FireWeaponAt(Unit, firstShotDurration + 2000, FiringPattern.BurstFire);
                             }
-                            GameFiber.Sleep(1800);
 
-                            switch (new Random().Next(0, 3))
+                            foreach (var cop in UnitOfficers)
                             {
-                                case 0:
+                                LSPDFR_Functions.AddCopToPursuit(pursuit, cop);
+                            }
+
+                            GameFiber.Sleep(firstShotDurration);
+
+                            foreach (var suspect in Suspects)
+                            {
+                                LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, false);
+                                var attributes = LSPDFR_Functions.GetPedPursuitAttributes(suspect);
+                                attributes.AverageFightTime = 1;
+                            }
+                            LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                        }
+                        else
+                        {
+                            Unit.IsSirenSilent = true;
+                            Unit.TopSpeed = 10f;
+
+                            if (shootWhileDriving)
+                            {
+                                GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 20f /* && Unit.Speed <= 1*/, 30000);
+                                //simple system to give tasks
+                                foreach (var suspect in Suspects)
+                                    suspect.Tasks.FireWeaponAt(Unit.Passengers[0], 15000, FiringPattern.BurstFire);
+                                GameFiber.Sleep(800);                                                                                                                                              //EDIT HERE
+                                Unit.Driver.Tasks.PerformDrivingManeuver(new Random().Next(2) == 0 ? VehicleManeuver.HandBrakeLeft : VehicleManeuver.HandBrakeRight);
+                                GameFiber.SleepUntil(() => Unit.Speed <= 2, 4000);
+                                OfficersLeaveVehicle(true);
+                                foreach (var officer in UnitOfficers) officer.Tasks.TakeCoverFrom(location, 13000);
+                                GameFiber.Sleep(4000);                                                                                                                                              //EDIT HERE
+                                if (new Random().Next(0, 2) == 0)
                                     UnitCallsForBackup("AAIC-OfficerDown");
-                                    break;
-                                case 1:
-                                    UnitCallsForBackup("AAIC-OfficerInPursuit");
-                                    break;
-                                case 2:
+                                else
                                     UnitCallsForBackup("AAIC-OfficerUnderFire");
-                                    break;
+                            }
+                            else
+                            {
+                                GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                                OfficersLeaveVehicle(true);
+
+                                foreach (var officer in UnitOfficers)
+                                {
+                                    officer.Tasks.FollowNavigationMeshToPosition(location, MathHelper.ConvertDirectionToHeading(location), 1f);
+                                }
+                                GameFiber.Sleep(1800);
+
+                                switch (new Random().Next(0, 3))
+                                {
+                                    case 0:
+                                        UnitCallsForBackup("AAIC-OfficerDown");
+                                        break;
+                                    case 1:
+                                        UnitCallsForBackup("AAIC-OfficerInPursuit");
+                                        break;
+                                    case 2:
+                                        UnitCallsForBackup("AAIC-OfficerUnderFire");
+                                        break;
+                                }
                             }
                         }
                     }
-                    
-                    while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f ) { GameFiber.Sleep(4000); }
+
+                    while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f) { GameFiber.Sleep(4000); }
                 }
 
                 return true;
@@ -203,11 +217,6 @@ namespace ShotsFired
                 LogTrivial_withAiC("ERROR: in AICallout object: At End(): " + e);
                 return false;
             }
-        }
-
-        private void TaskShooting()
-        {
-
         }
 
     }
