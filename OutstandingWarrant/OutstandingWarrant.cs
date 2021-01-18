@@ -138,10 +138,11 @@ namespace OutstandingWarrant
                     GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 10f, 30000);
                     UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "COP_ARRIVAL_ANNOUNCE_MEGAPHONE", 0, SpeechModifier.Force);
                     GameFiber.SleepUntil(
-                        () => Unit.Driver.Tasks.CurrentTaskStatus == Rage.TaskStatus.NoTask 
-                        || Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 2f 
+                        () => Unit.Driver.Tasks.CurrentTaskStatus == Rage.TaskStatus.NoTask
+                        || Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 2f
                         && Unit.Speed <= 1
                         , 30000);
+                    OfficerReportOnScene();
                     OfficersLeaveVehicle(true);
 
                     LogTrivialDebug_withAiC($"DEBUG: Aproach and Aim");

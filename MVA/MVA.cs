@@ -138,6 +138,7 @@ namespace MVA
 
                     GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 45f, 20000);
                     var unitTask = UnitOfficers[0].Tasks.ParkVehicle(SuspectsVehicles[1].GetOffsetPositionFront(-9f), heading);
+                    OfficerReportOnScene();
 
                     GameFiber.WaitWhile(() => unitTask.IsActive, 10000);
                     if (Unit.Position.DistanceTo(SuspectsVehicles[1].GetOffsetPositionFront(-9f)) >= 4f) Unit.Position = SuspectsVehicles[1].GetOffsetPositionFront(-9f); Unit.Heading = heading;
