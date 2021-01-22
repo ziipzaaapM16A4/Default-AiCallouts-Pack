@@ -149,7 +149,7 @@ namespace EmergencyCall
 
         private void OfficersAproach()
         {
-            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 0);
+            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
             Unit.IsSirenSilent = true;
             Unit.TopSpeed = 12f;
 

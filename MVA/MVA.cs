@@ -132,7 +132,7 @@ namespace MVA
                 else  //if vehicle is reaching its location
                 {
                     //Waiting until the unit arrives
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 65f, 0);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 65f, 25000);
                     Unit.IsSirenSilent = true;
                     Unit.TopSpeed = 16f;
 

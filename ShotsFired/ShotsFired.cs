@@ -99,7 +99,7 @@ namespace ShotsFired
                 }
                 else  //if vehicle is reaching its location
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 50f && Game.LocalPlayer.Character.Position.DistanceTo(location) >= 50f, 0);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 50f && Game.LocalPlayer.Character.Position.DistanceTo(location) >= 50f, 25000);
 
                     if (playerRespondingInAdditon)
                     {
@@ -137,7 +137,7 @@ namespace ShotsFired
                         {
                             //---------------------------------------------------- Temporary fix -----------------------------------------------------------
                             if (Suspects[0]) Suspects[0].Delete();
-                            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 0);
+                            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
                             Unit.IsSirenSilent = true;
                             Unit.TopSpeed = 12f;
 

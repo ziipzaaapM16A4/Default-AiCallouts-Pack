@@ -87,7 +87,7 @@ namespace OutstandingWarrant
                     GameFiber.SleepUntil(
                         () => Unit.Position.DistanceTo(location) < 33f
                         || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 33f
-                        , 0);   //bin ich oder die Unit angekommen?
+                        , 90000);   //bin ich oder die Unit angekommen?
 
                     GameFiber.StartNew(delegate {
                         GameFiber.Sleep(4000);
