@@ -152,9 +152,9 @@ namespace EmergencyCall
             GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
             Unit.IsSirenSilent = true;
             Unit.TopSpeed = 12f;
+            OfficerReportOnScene();
 
             GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
-            OfficerReportOnScene();
             Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
             GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
             OfficersLeaveVehicle(false);

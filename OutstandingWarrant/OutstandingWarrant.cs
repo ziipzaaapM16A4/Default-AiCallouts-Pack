@@ -83,15 +83,22 @@ namespace OutstandingWarrant
                     Disregard();
                 } else 
                 {
-                    Unit.TopSpeed = 16f; //mache einen krassen aproach
+                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < 40f || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 40f, 90000);
+                    if (Unit.Position.DistanceTo(location) < 40f && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) > 40f) {
+                        OfficerReportOnScene();
+                    }
+
                     GameFiber.SleepUntil(
                         () => Unit.Position.DistanceTo(location) < 33f
                         || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 33f
-                        , 90000);   //bin ich oder die Unit angekommen?
+                        , 50000);   //bin ich oder die Unit angekommen?
 
                     GameFiber.StartNew(delegate {
                         GameFiber.Sleep(4000);
                         Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("mp_cop_tutdealer_leaning@exit_aggressive"), "aggressive_exit", 1f, AnimationFlags.None);
+
+                        GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < 40f, 15000);
+                        try { Unit.TopSpeed = 16f; } catch { } //mache einen krassen aproach
                     });
 
                     LogTrivialDebug_withAiC($"DEBUG: Starting Animation maker Fiber");
@@ -135,6 +142,7 @@ namespace OutstandingWarrant
                         catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
                     }, $"[AmbientAICallouts] [AiCallout] OutstandingWarrant - Animation maker Fiber");
 
+
                     GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 10f, 30000);
                     UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "COP_ARRIVAL_ANNOUNCE_MEGAPHONE", 0, SpeechModifier.Force);
                     GameFiber.SleepUntil(
@@ -142,7 +150,6 @@ namespace OutstandingWarrant
                         || Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 2f
                         && Unit.Speed <= 1
                         , 30000);
-                    OfficerReportOnScene();
                     OfficersLeaveVehicle(true);
 
                     LogTrivialDebug_withAiC($"DEBUG: Aproach and Aim");
