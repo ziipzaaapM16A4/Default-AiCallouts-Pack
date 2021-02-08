@@ -37,15 +37,20 @@ namespace Fighting
                 Suspects[0].Tasks.FightAgainst(Suspects[1]);
                 Suspects[1].Tasks.FightAgainst(Suspects[0]);
 
-                GameFiber.StartNew(delegate { 
-                    while (!startLoosingHealth)
+                GameFiber.StartNew(delegate {
+                    try
                     {
-                        foreach (var suspect in Suspects)
+                        while (!startLoosingHealth)
                         {
-                            try { suspect.Health = 200; } catch { }
+                            foreach (var suspect in Suspects)
+                            {
+                                try { suspect.Health = 200; } catch { }
+                            }
+                            if (!Suspects.Any(p => p)) break;
+                            GameFiber.Sleep(1000);
                         }
-                        GameFiber.Sleep(1000);
                     }
+                    catch { }
                 });
 
                 return true;
