@@ -13,6 +13,7 @@ namespace MVA
     public class MVA : AiCallout
     {
         internal readonly List<Model> carModelList = new List<Model> { "SEMINOLE", "SCHAFTER2", "PRIMO", "BALLER2", "MINIVAN", "EXEMPLAR", "TAXI", "WARRENER", "ORACLE", "HABANERO","SABREGT"};
+        private Rage.Object notepad = null;
         private float heading;
         private bool finished = false;
         private bool senarioTaskAsigned;
@@ -197,6 +198,9 @@ namespace MVA
                             {
                                 try
                                 {
+                                    notepad = new Rage.Object("prop_notepad_02", UnitOfficers[0].Position, 0f);
+                                    notepad.AttachTo(UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+
                                     var taskPullsOutNotebook = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@enter"), "enter", 2f, AnimationFlags.None);
                                     GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
                                     UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
@@ -218,6 +222,7 @@ namespace MVA
 
                                     var putNotebookBack = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@exit"), "exit", 2f, AnimationFlags.None);
                                     GameFiber.SleepUntil(() => !putNotebookBack.IsActive, 10000);
+                                    if (notepad) notepad.Delete();
                                     UnitOfficers[0].Tasks.Clear();
                                     notebookAnimationFinished = true;
                                 }
@@ -297,6 +302,9 @@ namespace MVA
                                 {
                                     try
                                     {
+                                        notepad = new Rage.Object("prop_notepad_02", UnitOfficers[0].Position, 0f);
+                                        notepad.AttachTo(UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+
                                         if (UnitOfficers[0])
                                             if (LSPDFR_Functions.IsCopBusy(UnitOfficers[0], false))
                                             {
@@ -332,6 +340,7 @@ namespace MVA
                                                 UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
                                                 GameFiber.Sleep(31000);
                                             }
+                                        if (notepad) notepad.Delete();
                                     }
                                     catch (System.Threading.ThreadAbortException) { }
                                     catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }

@@ -12,6 +12,7 @@ namespace EmergencyCall
     public class EmergencyCall : AiCallout
     {
         private Ped caller;
+        private Rage.Object notepad = null;
         private Random rand = new Random();
         public override bool Setup()
         {
@@ -97,6 +98,8 @@ namespace EmergencyCall
                     {
                         try
                         {
+                            notepad = new Rage.Object("prop_notepad_02", UnitOfficers[0].Position, 0f);
+                            notepad.AttachTo(UnitOfficers[0], NativeFunction.Natives.GET_PED_BONE_INDEX<int>(UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
                             var taskPullsOutNotebook = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@enter"), "enter", 2f, AnimationFlags.None);
                             GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
                             UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
@@ -118,6 +121,7 @@ namespace EmergencyCall
 
                             var putNotebookBack = UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@exit"), "exit", 2f, AnimationFlags.None);
                             GameFiber.SleepUntil(() => !putNotebookBack.IsActive, 10000);
+                            if (notepad) notepad.Delete();
                             UnitOfficers[0].Tasks.Clear();
                             for (int i = 1; i < UnitOfficers.Count; i++) { UnitOfficers[i].Tasks.Clear(); }
                             notebookAnimationFinished = true;
