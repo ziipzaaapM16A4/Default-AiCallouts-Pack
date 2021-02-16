@@ -59,7 +59,7 @@ namespace EmergencyCall
         {
             try
             {
-                if (!IsUnitInTime(100f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
+                if (!IsUnitInTime(100f, responseType == EResponseType.Code3 ? 130 : 260))  //if vehicle is never reaching its location                                                          //loger so that player can react
                 {
                     Disregard();
                 }
