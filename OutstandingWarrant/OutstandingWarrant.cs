@@ -47,8 +47,8 @@ namespace OutstandingWarrant
 
                 if (nextLocation.Position == spawnPoints[0].Position) { LogTrivial_withAiC("ERROR: Aborting AiCallout because of missing spawnpoint matching the callout distance"); return false; }
 
-                location = nextLocation.Position;
-                calloutDetailsString = "OUTSTANDING_WARRANT";
+                Location = nextLocation.Position;
+                CalloutDetailsString = "OUTSTANDING_WARRANT";
                arrivalDistanceThreshold = 15f;
 
                 SetupSuspects(1);
@@ -83,13 +83,13 @@ namespace OutstandingWarrant
                     Disregard();
                 } else 
                 {
-                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < 40f || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 40f, 90000);
-                    if (Unit.Position.DistanceTo(location) < 40f && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) > 40f) {
+                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < 40f || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 40f, 90000);
+                    if (Unit.Position.DistanceTo(Location) < 40f && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) > 40f) {
                         OfficerReportOnScene();
                     }
 
                     GameFiber.SleepUntil(
-                        () => Unit.Position.DistanceTo(location) < 33f
+                        () => Unit.Position.DistanceTo(Location) < 33f
                         || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 33f
                         , 50000);   //bin ich oder die Unit angekommen?
 
@@ -97,7 +97,7 @@ namespace OutstandingWarrant
                         GameFiber.Sleep(4000);
                         Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("mp_cop_tutdealer_leaning@exit_aggressive"), "aggressive_exit", 1f, AnimationFlags.None);
 
-                        GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < 40f, 15000);
+                        GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < 40f, 15000);
                         try { Unit.TopSpeed = 16f; } catch { } //mache einen krassen aproach
                     });
 
@@ -143,11 +143,11 @@ namespace OutstandingWarrant
                     }, $"[AmbientAICallouts] [AiCallout] OutstandingWarrant - Animation maker Fiber");
 
 
-                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 10f, 30000);
+                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < arrivalDistanceThreshold + 10f, 30000);
                     UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "COP_ARRIVAL_ANNOUNCE_MEGAPHONE", 0, SpeechModifier.Force);
                     GameFiber.SleepUntil(
                         () => Unit.Driver.Tasks.CurrentTaskStatus == Rage.TaskStatus.NoTask
-                        || Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 2f
+                        || Unit.Position.DistanceTo(Location) < arrivalDistanceThreshold + 2f
                         && Unit.Speed <= 1
                         , 30000);
                     OfficersLeaveVehicle(true);

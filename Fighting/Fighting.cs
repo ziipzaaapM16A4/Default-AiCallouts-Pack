@@ -24,14 +24,14 @@ namespace Fighting
                 int trys = 0;
                 while (!posFound && trys < 20)
                 {
-                    location = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
-                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    Location = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }
                 arrivalDistanceThreshold = 14f;
-                calloutDetailsString = "CRIME_ASSAULT";
+                CalloutDetailsString = "CRIME_ASSAULT";
                 SetupSuspects(2);
 
                 Suspects[0].Tasks.FightAgainst(Suspects[1]);
@@ -72,12 +72,12 @@ namespace Fighting
                 }
                 else  //if vehicle is reaching its location
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 40f, 25000);
                     Unit.IsSirenSilent = true;
                     Unit.TopSpeed = 12f;
                     OfficerReportOnScene();
 
-                    GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                    GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
                     Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
                     GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
                     OfficersLeaveVehicle(true);

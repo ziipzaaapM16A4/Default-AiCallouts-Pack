@@ -19,8 +19,8 @@ namespace EmergencyCall
             try
             {
                 SceneInfo = "Civilian in need of assistance";
-                calloutDetailsString = "CIV_ASSISTANCE";
-                if (rand.Next(0, 2) == 0) { responseType = EResponseType.Code3; } else { responseType = EResponseType.Code2; }
+                CalloutDetailsString = "CIV_ASSISTANCE";
+                if (rand.Next(0, 2) == 0) { ResponseType = EResponseType.Code3; } else { ResponseType = EResponseType.Code2; }
 
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
@@ -36,16 +36,16 @@ namespace EmergencyCall
                     NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
-                    location = roadside;
+                    Location = roadside;
 
 
-                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }
 
-                caller = new Ped(location);
+                caller = new Ped(Location);
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
@@ -59,7 +59,7 @@ namespace EmergencyCall
         {
             try
             {
-                if (!IsUnitInTime(100f, responseType == EResponseType.Code3 ? 130 : 260))  //if vehicle is never reaching its location                                                          //loger so that player can react
+                if (!IsUnitInTime(100f, ResponseType == EResponseType.Code3 ? 130 : 260))  //if vehicle is never reaching its location                                                          //loger so that player can react
                 {
                     Disregard();
                 }
@@ -153,12 +153,12 @@ namespace EmergencyCall
 
         private void OfficersAproach()
         {
-            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
+            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 40f, 25000);
             Unit.IsSirenSilent = true;
             Unit.TopSpeed = 12f;
             OfficerReportOnScene();
 
-            GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+            GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
             Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
             GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
             OfficersLeaveVehicle(false);

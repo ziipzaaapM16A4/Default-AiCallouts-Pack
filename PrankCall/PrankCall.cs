@@ -20,13 +20,13 @@ namespace PrankCall
                 int trys = 0;
                 while (!posFound && trys < 20)
                 {
-                    location = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
-                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    Location = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }
-                calloutDetailsString = "CIV_ASSISTANCE";
+                CalloutDetailsString = "CIV_ASSISTANCE";
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
@@ -46,19 +46,19 @@ namespace PrankCall
                 }
                 else
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 40f, 25000);
                     Unit.IsSirenSilent = true;
                     Unit.TopSpeed = 12f;
                     OfficerReportOnScene();
 
-                    GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                    GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
                     Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
                     GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
                     OfficersLeaveVehicle(true);
 
                     LogTrivialDebug_withAiC($"DEBUG: Go Look Around");
                     string[] anims = { "wait_idle_a", "wait_idle_b", "wait_idle_c" };
-                    foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
+                    foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(Location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
                     GameFiber.Sleep(12000);                                                                                                   //Static behavior. bad way                                   
                     for (int i = 0; i < UnitOfficers.Count; i++)
                     {

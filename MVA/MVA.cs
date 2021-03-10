@@ -25,7 +25,7 @@ namespace MVA
             try
             {
                 SceneInfo = "Motor Vehicle Accident";
-                calloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
+                CalloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
                 int trys = 0;
@@ -45,11 +45,11 @@ namespace MVA
                     Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     Rage.Native.NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
-                    location = roadside;
+                    Location = roadside;
 
 
-                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }
@@ -133,12 +133,12 @@ namespace MVA
                 else  //if vehicle is reaching its location
                 {
                     //Waiting until the unit arrives
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 65f, 25000);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 65f, 25000);
                     Unit.IsSirenSilent = true;
                     Unit.TopSpeed = 16f;
                     OfficerReportOnScene();
 
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 45f, 20000);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 45f, 20000);
                     var unitTask = UnitOfficers[0].Tasks.ParkVehicle(SuspectsVehicles[1].GetOffsetPositionFront(-9f), heading);
 
                     GameFiber.WaitWhile(() => unitTask.IsActive, 10000);
@@ -372,7 +372,7 @@ namespace MVA
             {
                 var suspectsRecoveryVar = Suspects;                    //muss ich kopieren da Suspects; durch den async aufruf nach 61 sekunden wahrscheinlich nichtmehr existiert.
                 var suspectsVehicleRecoveryVar = SuspectsVehicles;
-                var locationRecoveryVar = location;
+                var locationRecoveryVar = Location;
                 GameFiber.StartNew(delegate
                 {
                     GameFiber.Sleep(61000);
@@ -394,7 +394,7 @@ namespace MVA
                         } 
                     }
                     if (Unit) 
-                        if (Unit.DistanceTo(location) < 9f) { 
+                        if (Unit.DistanceTo(Location) < 9f) { 
                             Unit.Delete(); 
                             foreach (var officer in UnitOfficers) { 
                                 if (officer) officer.Delete();

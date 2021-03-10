@@ -10,12 +10,10 @@ using System.Linq;
 
 namespace ShotsFired
 {
-    //Its very important to use these unless the AiCallout will not be compatible with the player callouts
-    //Please use try catch blocks to get an error message when chrashing.
-
-
     public class ShotsFired : AiCallout
     {
+        public override int UnitsNeeded => 3;
+
         bool shootWhileDriving = true;//(new Random().Next(2) == 0);
         Random randomizer = new Random();
         public override bool Setup()
@@ -25,10 +23,13 @@ namespace ShotsFired
             //Example idea: Place a Damaged Vehicle infront of a Pole and place a swearing ped nearby.
             try
             {
+                #region Plugin Details
                 SceneInfo = "Shots Fired";
-                calloutDetailsString = "CRIME_SHOTS_FIRED";
+                CalloutDetailsString = "CRIME_SHOTS_FIRED";
                 arrivalDistanceThreshold = 30f;
+                #endregion
 
+                #region Spawnpoint searching
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
                 int trys = 0;
@@ -43,16 +44,19 @@ namespace ShotsFired
                     NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
-                    location = roadside;
+                    Location = roadside;
 
 
-                    if (location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
+                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
                     trys++;
                 }
+                #endregion
 
-                SetupSuspects(1);  //need to stay 1. more would result that in a callout the rest would flee.
+                SetupSuspects(1);  //need to stay 1. more would result that in a callout the rest would flee due to the way the - AAIC Backup requests-LSPFR Callouts work.
+
+                #region Tasking Suspect
                 GameFiber.StartNew(delegate {
                     try { 
                         for(int i= 0; i < 50; i++ )
@@ -60,7 +64,7 @@ namespace ShotsFired
                             foreach (var suspect in Suspects) { 
                                 if (suspect)
                                 {
-                                    suspect.Tasks.TakeCoverFrom(location, 140000); 
+                                    suspect.Tasks.TakeCoverFrom(Location, 140000); 
                                     if (suspect.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && suspect.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress)
                                     {
                                         suspect.Tasks.TakeCoverFrom(Game.LocalPlayer.Character.Position, 13000);
@@ -76,6 +80,7 @@ namespace ShotsFired
                         LogTrivial_withAiC("ERROR: in AICallout: AAIC-ShotsFired - get in cover at setup fiber: " + e);
                     }
                 }, "AAIC-ShotsFired - get in cover at setup fiber");
+                #endregion
 
                 return true;
             }
@@ -99,9 +104,9 @@ namespace ShotsFired
                 }
                 else  //if vehicle is reaching its location
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 50f && Game.LocalPlayer.Character.Position.DistanceTo(location) >= 50f, 25000);
+                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 50f && Game.LocalPlayer.Character.Position.DistanceTo(Location) >= 50f, 25000);
 
-                    if (playerRespondingInAdditon)
+                    if (playerRespondingInAdditon)                  //obsolete soon i guess
                     {
                         var firstShotDurration = 3000;
                         var pursuit = LSPDFR_Functions.CreatePursuit();
@@ -128,7 +133,7 @@ namespace ShotsFired
                             attributes.AverageFightTime = 1;
                         }
                         LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                        while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f) { GameFiber.Sleep(4000); }
+                        while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(Location) < 40f) { GameFiber.Sleep(4000); }
                     }
                     else
                     {
@@ -137,19 +142,19 @@ namespace ShotsFired
                         {
                             //---------------------------------------------------- Temporary fix -----------------------------------------------------------
                             if (Suspects[0]) Suspects[0].Delete();
-                            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(location) >= 40f, 25000);
+                            GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 40f, 25000);
                             Unit.IsSirenSilent = true;
                             Unit.TopSpeed = 12f;
                             OfficerReportOnScene();
 
-                            GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                            GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
                             Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
                             GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
                             OfficersLeaveVehicle(true);
 
                             LogTrivialDebug_withAiC($"DEBUG: Go Look Around");
                             string[] anims = { "wait_idle_a", "wait_idle_b", "wait_idle_c" };
-                            foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
+                            foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(Location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
                             GameFiber.Sleep(12000);                                                                                                   //Static behavior. bad way                                   
                             for (int i = 0; i < UnitOfficers.Count; i++)
                             {
@@ -172,7 +177,7 @@ namespace ShotsFired
 
                             if (shootWhileDriving)
                             {
-                                GameFiber.SleepUntil(() => Unit.Position.DistanceTo(location) < arrivalDistanceThreshold + 20f /* && Unit.Speed <= 1*/, 30000);
+                                GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < arrivalDistanceThreshold + 20f /* && Unit.Speed <= 1*/, 30000);
                                 //simple system to give tasks
                                 foreach (var suspect in Suspects)
                                     suspect.Tasks.FireWeaponAt(Unit.Passengers[0], 15000, FiringPattern.BurstFire);
@@ -180,7 +185,7 @@ namespace ShotsFired
                                 Unit.Driver.Tasks.PerformDrivingManeuver(new Random().Next(2) == 0 ? VehicleManeuver.HandBrakeLeft : VehicleManeuver.HandBrakeRight);
                                 GameFiber.SleepUntil(() => Unit.Speed <= 2, 4000);
                                 OfficersLeaveVehicle(true);
-                                foreach (var officer in UnitOfficers) officer.Tasks.TakeCoverFrom(location, 13000);
+                                foreach (var officer in UnitOfficers) officer.Tasks.TakeCoverFrom(Location, 13000);
                                 GameFiber.Sleep(4000);                                                                                                                                              //EDIT HERE
                                 if (new Random().Next(0, 2) == 0)
                                     UnitCallsForBackup("AAIC-OfficerDown");
@@ -189,12 +194,12 @@ namespace ShotsFired
                             }
                             else
                             {
-                                GameFiber.SleepUntil(() => location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
+                                GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
                                 OfficersLeaveVehicle(true);
 
                                 foreach (var officer in UnitOfficers)
                                 {
-                                    officer.Tasks.FollowNavigationMeshToPosition(location, MathHelper.ConvertDirectionToHeading(location), 1f);
+                                    officer.Tasks.FollowNavigationMeshToPosition(Location, MathHelper.ConvertDirectionToHeading(Location), 1f);
                                 }
                                 GameFiber.Sleep(1800);
 
@@ -211,7 +216,7 @@ namespace ShotsFired
                                         break;
                                 }
                             }
-                            while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(location) < 40f) { GameFiber.Sleep(4000); }
+                            while (LSPD_First_Response.Mod.API.Functions.IsCalloutRunning() || Game.LocalPlayer.Character.Position.DistanceTo(Location) < 40f) { GameFiber.Sleep(4000); }
                         }
                     }
                 }
