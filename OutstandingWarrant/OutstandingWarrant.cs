@@ -78,18 +78,18 @@ namespace OutstandingWarrant
         {
             try
             {
-                if (!IsUnitInTime(150f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
+                if (!IsUnitInTime(Units[0].PoliceVehicle, 150f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
                 {
                     Disregard();
                 } else 
                 {
-                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < 40f || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 40f, 90000);
-                    if (Unit.Position.DistanceTo(Location) < 40f && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) > 40f) {
-                        OfficerReportOnScene();
+                    GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) < 40f || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 40f, 90000);
+                    if (Units[0].PoliceVehicle.Position.DistanceTo(Location) < 40f && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) > 40f) {
+                        OfficerReportOnScene(Units[0]);
                     }
 
                     GameFiber.SleepUntil(
-                        () => Unit.Position.DistanceTo(Location) < 33f
+                        () => Units[0].PoliceVehicle.Position.DistanceTo(Location) < 33f
                         || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0].Position) < 33f
                         , 50000);   //bin ich oder die Unit angekommen?
 
@@ -97,8 +97,8 @@ namespace OutstandingWarrant
                         GameFiber.Sleep(4000);
                         Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("mp_cop_tutdealer_leaning@exit_aggressive"), "aggressive_exit", 1f, AnimationFlags.None);
 
-                        GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < 40f, 15000);
-                        try { Unit.TopSpeed = 16f; } catch { } //mache einen krassen aproach
+                        GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) < 40f, 15000);
+                        try { Units[0].PoliceVehicle.TopSpeed = 16f; } catch { } //mache einen krassen aproach
                     });
 
                     LogTrivialDebug_withAiC($"DEBUG: Starting Animation maker Fiber");
@@ -143,14 +143,14 @@ namespace OutstandingWarrant
                     }, $"[AmbientAICallouts] [AiCallout] OutstandingWarrant - Animation maker Fiber");
 
 
-                    GameFiber.SleepUntil(() => Unit.Position.DistanceTo(Location) < arrivalDistanceThreshold + 10f, 30000);
-                    UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "COP_ARRIVAL_ANNOUNCE_MEGAPHONE", 0, SpeechModifier.Force);
+                    GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) < arrivalDistanceThreshold + 10f, 30000);
+                    Units[0].UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "COP_ARRIVAL_ANNOUNCE_MEGAPHONE", 0, SpeechModifier.Force);
                     GameFiber.SleepUntil(
-                        () => Unit.Driver.Tasks.CurrentTaskStatus == Rage.TaskStatus.NoTask
-                        || Unit.Position.DistanceTo(Location) < arrivalDistanceThreshold + 2f
-                        && Unit.Speed <= 1
+                        () => Units[0].PoliceVehicle.Driver.Tasks.CurrentTaskStatus == Rage.TaskStatus.NoTask
+                        || Units[0].PoliceVehicle.Position.DistanceTo(Location) < arrivalDistanceThreshold + 2f
+                        && Units[0].PoliceVehicle.Speed <= 1
                         , 30000);
-                    OfficersLeaveVehicle(true);
+                    OfficersLeaveVehicle(Units[0], true);
 
                     LogTrivialDebug_withAiC($"DEBUG: Aproach and Aim");
                     int task = 0;                                         //0 = aproaching & aiming, 1 = aiming, 2 = shooting, 3 = lasttimeaproach, 4 = aimOnce
@@ -158,7 +158,7 @@ namespace OutstandingWarrant
 
 
                     #region AI Hanlder
-                    foreach (var officer in UnitOfficers) 
+                    foreach (var officer in Units[0].UnitOfficers) 
                     {
                         officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true);
                         GameFiber.StartNew(delegate
@@ -252,7 +252,7 @@ namespace OutstandingWarrant
                     //LogVerboseDebug_withAiC($"DEBUG: get Task 1");
 
 
-                    if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force); }
+                    if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force); }
                     GameFiber.Sleep(12000);
 
                     senarioTaskAsigned = true;
@@ -262,10 +262,10 @@ namespace OutstandingWarrant
 
                     Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true);
                     GameFiber.Sleep(500);
-                    UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_01", "COP_SEES_WEAPON", 0, SpeechModifier.Force);
+                    Units[0].UnitOfficers[0].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_01", "COP_SEES_WEAPON", 0, SpeechModifier.Force);
                     GameFiber.Sleep(1200);
-                    if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "DRAW_GUN", 0, SpeechModifier.Force); }
-                    else { UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("S_M_Y_COP_01_WHITE_FULL_01"), "DRAW_GUN", 0, SpeechModifier.Force); }
+                    if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech("S_M_Y_COP_01_WHITE_FULL_02", "DRAW_GUN", 0, SpeechModifier.Force); }
+                    else { Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("S_M_Y_COP_01_WHITE_FULL_01"), "DRAW_GUN", 0, SpeechModifier.Force); }
                     GameFiber.Sleep(2000);
 
 
@@ -273,19 +273,19 @@ namespace OutstandingWarrant
                     {
                         
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
-                        Suspects[0].Tasks.AimWeaponAt(UnitOfficers[0], 30000);
+                        Suspects[0].Tasks.AimWeaponAt(Units[0].UnitOfficers[0], 30000);
                         GameFiber.Sleep(900);
-                        if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
-                        UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
+                        if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
+                        Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                         GameFiber.Sleep(900);
-                        if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
-                        UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
+                        if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
+                        Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                         GameFiber.Sleep(900);
-                        if (UnitOfficers.Count > 1) { UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
-                        UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
+                        if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
+                        Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                         GameFiber.Sleep(2000);
 
-                        Suspects[0].Tasks.FireWeaponAt(UnitOfficers[0], 20000, FiringPattern.BurstFirePistol);
+                        Suspects[0].Tasks.FireWeaponAt(Units[0].UnitOfficers[0], 20000, FiringPattern.BurstFirePistol);
                         Suspects[0].RelationshipGroup = new RelationshipGroup("PRISONER");
                         Suspects[0].RelationshipGroup.SetRelationshipWith("COP", Relationship.Hate);
                         task = 2;
@@ -297,13 +297,13 @@ namespace OutstandingWarrant
                             task = 3;
                             LogVerboseDebug_withAiC($"DEBUG: get Task 3");
                             GameFiber.Sleep(6000);
-                            //var RadioOfficerIndex = MathHelper.GetRandomInteger(0, UnitOfficers.Count);          //Radio Animation. Future
-                            //UnitOfficers[RadioOfficerIndex].Tasks.PlayAnimation()
+                            //var RadioOfficerIndex = MathHelper.GetRandomInteger(0, Units[0].UnitOfficers.Count);          //Radio Animation. Future
+                            //Units[0].UnitOfficers[RadioOfficerIndex].Tasks.PlayAnimation()
 
                             GameFiber.Sleep(5000);
                             if (!LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) ) { Suspects[0].Delete(); }
                             GameFiber.Sleep(5000);
-                            EnterAndDismiss();
+                            EnterAndDismiss(Units[0]);
                         }
                         else
                         {

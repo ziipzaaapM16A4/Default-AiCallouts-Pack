@@ -40,35 +40,35 @@ namespace PrankCall
         {
             try
             {
-                if (!IsUnitInTime(100f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
+                if (!IsUnitInTime(Units[0].PoliceVehicle, 100f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
                 {
                     Disregard();
                 }
                 else
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 40f, 25000);
-                    Unit.IsSirenSilent = true;
-                    Unit.TopSpeed = 12f;
-                    OfficerReportOnScene();
+                    GameFiber.WaitWhile(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) >= 40f, 25000);
+                    Units[0].PoliceVehicle.IsSirenSilent = true;
+                    Units[0].PoliceVehicle.TopSpeed = 12f;
+                    OfficerReportOnScene(Units[0]);
 
-                    GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
-                    Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
-                    GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
-                    OfficersLeaveVehicle(true);
+                    GameFiber.SleepUntil(() => Location.DistanceTo(Units[0].PoliceVehicle.Position) < arrivalDistanceThreshold + 5f /* && Units[0].PoliceVehicle.Speed <= 1*/, 30000);
+                    Units[0].PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
+                    GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Speed <= 1, 5000);
+                    OfficersLeaveVehicle(Units[0], true);
 
                     LogTrivialDebug_withAiC($"DEBUG: Go Look Around");
                     string[] anims = { "wait_idle_a", "wait_idle_b", "wait_idle_c" };
-                    foreach (var officer in UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(Location.Around(7f, 10f), Unit.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
+                    foreach (var officer in Units[0].UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(Location.Around(7f, 10f), Units[0].PoliceVehicle.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
                     GameFiber.Sleep(12000);                                                                                                   //Static behavior. bad way                                   
-                    for (int i = 0; i < UnitOfficers.Count; i++)
+                    for (int i = 0; i < Units[0].UnitOfficers.Count; i++)
                     {
-                        if (UnitOfficers[i]) UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("missmic_4premierejimwaitbef_prem"), anims[randomizer.Next(0, anims.Length)], 1f, AnimationFlags.RagdollOnCollision);
+                        if (Units[0].UnitOfficers[i]) Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("missmic_4premierejimwaitbef_prem"), anims[randomizer.Next(0, anims.Length)], 1f, AnimationFlags.RagdollOnCollision);
                         GameFiber.Sleep(2000);
                     }
-                    GameFiber.SleepWhile(() => UnitOfficers[0].Tasks.CurrentTaskStatus == Rage.TaskStatus.InProgress || UnitOfficers[0].Tasks.CurrentTaskStatus == Rage.TaskStatus.Preparing, 7000);
+                    GameFiber.SleepWhile(() => Units[0].UnitOfficers[0].Tasks.CurrentTaskStatus == Rage.TaskStatus.InProgress || Units[0].UnitOfficers[0].Tasks.CurrentTaskStatus == Rage.TaskStatus.Preparing, 7000);
 
                     LogTrivialDebug_withAiC($"DEBUG: PrankCallSpeech");
-                    UnitOfficers[0].PlayAmbientSpeech("S_M_Y_FIREMAN_01_WHITE_FULL_01", "EMERG_PRANK_CALL", 0, SpeechModifier.Force);                                                                       //Not finished needs speech
+                    Units[0].UnitOfficers[0].PlayAmbientSpeech("S_M_Y_FIREMAN_01_WHITE_FULL_01", "EMERG_PRANK_CALL", 0, SpeechModifier.Force);                                                                       //Not finished needs speech
                     GameFiber.Sleep(4000);
                 }
                 return true;
@@ -84,7 +84,7 @@ namespace PrankCall
         {
             try
             {
-                EnterAndDismiss();
+                EnterAndDismiss(Units[0]);
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }

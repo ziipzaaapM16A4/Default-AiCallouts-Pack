@@ -66,38 +66,38 @@ namespace Fighting
         {
             try
             {
-                if (!IsUnitInTime(100f, 130))  //if vehicle is never reaching its location
+                if (!IsUnitInTime(Units[0].PoliceVehicle, 100f, 130))  //if vehicle is never reaching its location
                 {
                     Disregard();
                 }
                 else  //if vehicle is reaching its location
                 {
-                    GameFiber.WaitWhile(() => Unit.Position.DistanceTo(Location) >= 40f, 25000);
-                    Unit.IsSirenSilent = true;
-                    Unit.TopSpeed = 12f;
-                    OfficerReportOnScene();
+                    GameFiber.WaitWhile(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) >= 40f, 25000);
+                    Units[0].PoliceVehicle.IsSirenSilent = true;
+                    Units[0].PoliceVehicle.TopSpeed = 12f;
+                    OfficerReportOnScene(Units[0]);
 
-                    GameFiber.SleepUntil(() => Location.DistanceTo(Unit.Position) < arrivalDistanceThreshold + 5f /* && Unit.Speed <= 1*/, 30000);
-                    Unit.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
-                    GameFiber.SleepUntil(() => Unit.Speed <= 1, 5000);
-                    OfficersLeaveVehicle(true);
+                    GameFiber.SleepUntil(() => Location.DistanceTo(Units[0].PoliceVehicle.Position) < arrivalDistanceThreshold + 5f /* && Units[0].PoliceVehicle.Speed <= 1*/, 30000);
+                    Units[0].PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
+                    GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Speed <= 1, 5000);
+                    OfficersLeaveVehicle(Units[0], true);
 
                     startLoosingHealth = true;
 
                     LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
-                    foreach (var officer in UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true); }
+                    foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true); }
 
                     if (IsAiTakingCare())
                     {
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
                         LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
-                        var taskGoWhileAiming0 = UnitOfficers[0].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot);
-                        if (UnitOfficers.Count > 1 && Suspects[1]) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[1], Suspects[1], 5f, 1f, false, FiringPattern.SingleShot); }
-                        else if (UnitOfficers.Count > 1) { UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot); }
+                        var taskGoWhileAiming0 = Units[0].UnitOfficers[0].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot);
+                        if (Units[0].UnitOfficers.Count > 1 && Suspects[1]) { Units[0].UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[1], Suspects[1], 5f, 1f, false, FiringPattern.SingleShot); }
+                        else if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot); }
                         GameFiber.WaitWhile(() => taskGoWhileAiming0.IsActive, 10000);
-                        UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 30000);
-                        if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 30000);
-                        foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.PutHandsUp(6000, UnitOfficers[0]); }
+                        Units[0].UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 30000);
+                        if (Units[0].UnitOfficers.Count > 1) Units[0].UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 30000);
+                        foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.PutHandsUp(6000, Units[0].UnitOfficers[0]); }
                         GameFiber.Sleep(9000);
 
                         LogTrivialDebug_withAiC($"DEBUG: Flee or Stay");
@@ -162,14 +162,14 @@ namespace Fighting
                                 if (gettingArrested.Any(ofc => ofc.Equals(false))) finished = true;
                             }
 
-                            foreach (var officer in UnitOfficers) { if (officer) officer.Tasks.Clear(); }
-                            EnterAndDismiss(false);
+                            foreach (var officer in Units[0].UnitOfficers) { if (officer) officer.Tasks.Clear(); }
+                            EnterAndDismiss(Units[0]);
                         }
                         else
                         {
-                            if (UnitOfficers.Count != 1) { if (UnitOfficers[1]) UnitOfficers[1].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
-                            else if (UnitOfficers[0]) { UnitOfficers[0].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
-                            foreach (var officer in UnitOfficers) { if (officer) officer.Tasks.Clear(); }
+                            if (Units[0].UnitOfficers.Count != 1) { if (Units[0].UnitOfficers[1]) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
+                            else if (Units[0].UnitOfficers[0]) { Units[0].UnitOfficers[0].PlayAmbientSpeech(null, "CRIMINAL_WARNING", 0, SpeechModifier.Force); }
+                            foreach (var officer in Units[0].UnitOfficers) { if (officer) officer.Tasks.Clear(); }
                             GameFiber.Sleep(4000);
 
                             underArrest = new List<bool>();
@@ -198,12 +198,12 @@ namespace Fighting
 
                             if (!someoneStopped) 
                                 foreach (var suspect in Suspects) { 
-                                    if (suspect) suspect.Tasks.Flee(UnitOfficers[0], 100f, 30000); 
+                                    if (suspect) suspect.Tasks.Flee(Units[0].UnitOfficers[0], 100f, 30000); 
                                     suspect.IsPersistent = false; 
                                 }
 
                             GameFiber.Sleep(5100);
-                            EnterAndDismiss(false);
+                            EnterAndDismiss(Units[0]);
                         }
 
                         LogTrivial_withAiC($"INFO: Call Finished");
@@ -213,13 +213,13 @@ namespace Fighting
                         LogTrivial_withAiC($"INFO: choosed callout path");
                         LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
                         //unitOfficers[0].Tasks.GoToWhileAiming(location, suspects[0], 10f, 1f, false, FiringPattern.SingleShot);
-                        //if (UnitOfficers.Count > 1) unitOfficers[1].Tasks.GoToWhileAiming(location, suspects[1], 10f, 1f, false, FiringPattern.SingleShot);
-                        UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 18000);
-                        if (UnitOfficers.Count > 1) UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
+                        //if (Units[0].UnitOfficers.Count > 1) unitOfficers[1].Tasks.GoToWhileAiming(location, suspects[1], 10f, 1f, false, FiringPattern.SingleShot);
+                        Units[0].UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 18000);
+                        if (Units[0].UnitOfficers.Count > 1) Units[0].UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
                         foreach (var suspect in Suspects)
                         {
-                            if (suspect && UnitOfficers[0])
-                                suspect.Tasks.PutHandsUp(120000, UnitOfficers[0]);
+                            if (suspect && Units[0].UnitOfficers[0])
+                                suspect.Tasks.PutHandsUp(120000, Units[0].UnitOfficers[0]);
                         }
 
                         switch (new Random().Next(0, 5))
