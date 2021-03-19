@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.ComponentModel;
 using Rage;
@@ -262,10 +262,12 @@ namespace ShotsFired
                         {
                             EnterAndDismiss(tmpUnit);
                             if (tmpUnit.PoliceVehicle.GetAttachedBlip() != null) tmpUnit.PoliceVehicle.GetAttachedBlip().Delete();
-                            foreach (var ofc in tmpUnit.UnitOfficers)
-                            {
+                            foreach (var ofc in tmpUnit.UnitOfficers) {
                                 if (ofc) 
-                                    if (ofc.GetAttachedBlip()) { ofc.GetAttachedBlip().Delete(); }
+                                    foreach (var blip in ofc.GetAttachedBlips())
+                                    {
+                                        if (blip.IsValid()) { blip.Delete(); }
+                                    }
                             }
 
                             tmpUnit.PoliceVehicle.TopSpeed = 25f;
