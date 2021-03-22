@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Common;
 using System.ComponentModel;
 using Rage;
@@ -147,8 +147,9 @@ namespace ShotsFired
                     {
                         //-------------------------------------- Player -----------------------------------------------------
                         #region Officer Tasks
-                        //If Player is near enough to the scene => auto pursuit
-                        if (someoneSpottedSuspect
+                        //If Player is near enough to the scene and other units spotted the suspect already => auto pursuit
+                        if (someoneSpottedSuspect 
+                            && !playerSpottedSuspect
                             && (Game.LocalPlayer.Character.DistanceTo(Suspects[0]) < 65f || Game.LocalPlayer.Character.DistanceTo(Location) <= arrivalDistanceThreshold)
                             )
                             LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
@@ -160,11 +161,13 @@ namespace ShotsFired
                                 && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 45f + (playerRespondingInAdditon ? 20f : 0f)) {
                                 LogVerboseDebug_withAiC("player has visual on suspect");
                                 playerInvolved = true;
-                                someoneSpottedSuspect = true;
+                                //someoneSpottedSuspect = true;
                                 playerSpottedSuspect = true;
-                                LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                                LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);
+                                LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);                  //what should i do? the player cannot get into pursuit after reporting 
+                                                                                                                //maybe due to the SetPursuitAsCalledIn(pursuit, false)
+                                LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);                          //problem: not beeing able to repot the pursuit. no pursuit radar?
                             }
+
 
                         //wenn player nach ai suspect sieht
                         if (someoneSpottedSuspect && !playerSpottedSuspect)
@@ -176,6 +179,7 @@ namespace ShotsFired
                                 playerInvolved = true;
                                 playerSpottedSuspect = true;
                                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                                //LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);               //the solution? no its not because the officer still wouldn't be able to call in the pursuit
                             }
                         }
 
@@ -198,10 +202,10 @@ namespace ShotsFired
                                     {
                                         LogVerboseDebug_withAiC("cop" + o + "has visual on suspect");
                                         someoneSpottedSuspect = true;
-                                        if (Game.LocalPlayer.Character.DistanceTo(Suspects[0]) < 100f) LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                                        LSPDFR_Functions.AddCopToPursuit(pursuit, o);
+                                        if (playerSpottedSuspect) LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);
                                         LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, true);
                                     }
+
                                 if (someoneSpottedSuspect) if (!LSPDFR_Functions.IsPedInPursuit(o)) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
 
                                 //Arrived at the Scene still moving
@@ -261,7 +265,7 @@ namespace ShotsFired
                         try
                         {
                             EnterAndDismiss(tmpUnit);
-                            if (tmpUnit.PoliceVehicle.GetAttachedBlip() != null) tmpUnit.PoliceVehicle.GetAttachedBlip().Delete();
+                            foreach (var blip in tmpUnit.PoliceVehicle.GetAttachedBlips()) if (blip) blip.Delete();
                             foreach (var ofc in tmpUnit.UnitOfficers) {
                                 if (ofc) 
                                     foreach (var blip in ofc.GetAttachedBlips())
