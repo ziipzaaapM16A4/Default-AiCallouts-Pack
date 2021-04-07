@@ -805,7 +805,7 @@ namespace MVA
             //if (cone1) cone1.Delete();      //is in another line for isPlayerResonponding in addition
             //if (cone2) cone2.Delete();
             finished = true;
-            EnterAndDismiss(Units[1]);
+            EnterAndDismiss(Units[0]);
         }
         private static bool IsExternalPluginRunning(string plugin, Version minimumVersion)
         {
