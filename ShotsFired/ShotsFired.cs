@@ -128,6 +128,7 @@ namespace ShotsFired
                 LSPD_First_Response.Mod.API.LHandle pursuit = LSPDFR_Functions.CreatePursuit();
 
                 LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, false);
+                LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[0]);
                 LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
                 var attributes = LSPDFR_Functions.GetPedPursuitAttributes(Suspects[0]);
@@ -156,7 +157,7 @@ namespace ShotsFired
 
 
                         //Player Spottet Suspect
-                        if (!someoneSpottedSuspect)
+                        if (!someoneSpottedSuspect && !playerSpottedSuspect)
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
                                 && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 45f + (playerRespondingInAdditon ? 20f : 0f)) {
                                 LogVerboseDebug_withAiC("player has visual on suspect");
@@ -206,7 +207,7 @@ namespace ShotsFired
                                         LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, true);
                                     }
 
-                                if (someoneSpottedSuspect) if (!LSPDFR_Functions.IsPedInPursuit(o)) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
+                                if (someoneSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
 
                                 //Arrived at the Scene still moving
                                 if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
