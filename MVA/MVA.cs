@@ -5,6 +5,7 @@ using Rage;
 using System.Reflection;
 using LSPD_First_Response.Mod.API;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
+using NativeFunction = Rage.Native.NativeFunction;
 using AmbientAICallouts.API;
 using Functions = AmbientAICallouts.API.Functions;
 
@@ -38,14 +39,12 @@ namespace MVA
                     //Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
 
                     Vector3 irrelevant;
-                    heading = Units[0].PoliceVehicle.Heading;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
+                    heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
 
-                    Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
+                    //Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
 
-                    Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     Rage.Native.NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
-
-                    Location = roadside;
+                    if (Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside)) Location = roadside; //_GET_ROAD_SIDE_POINT_WITH_HEADING
 
 
                     if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
@@ -75,7 +74,7 @@ namespace MVA
                 {
                     try
                     {
-                        List<string> idleAnims = new List<string>() { "idle_a", "idle_b", "idle_c" };
+                        List<string> idleAnims = new List<string>() { "idle_a", /*"idle_b",*/ "idle_c" };
                         while (!finished)
                         {                                                                                   //sollange call läuft //Workaround
                             while (!senarioTaskAsigned)
@@ -85,11 +84,8 @@ namespace MVA
                                     if (Suspects[i] 
                                     && !senarioTaskAsigned 
                                     && !finished
-                                    && !LSPDFR_Functions.IsPedArrested(Suspects[i]) 
-                                    && !LSPDFR_Functions.IsPedBeingCuffed(Suspects[i]) 
-                                    && !LSPDFR_Functions.IsPedBeingFrisked(Suspects[i]) 
-                                    && !LSPDFR_Functions.IsPedBeingGrabbed(Suspects[i]) 
-                                    && !LSPDFR_Functions.IsPedInPursuit(Suspects[i])
+                                    && !NativeFunction.Natives.GET_IS_TASK_ACTIVE<bool>(Suspects[i], 35)
+                                    && !IsPedOccupiedbyLSPDFRInteraction(Suspects[i])
                                     )
                                     {
                                         if (Suspects[i].Tasks.CurrentTaskStatus == Rage.TaskStatus.NoTask)
@@ -193,9 +189,80 @@ namespace MVA
                         {
                             LogTrivial_withAiC($"INFO: chose selfhandle path");
                             //Officer 0 Notebook animation Fiber
+                            bool seperateThem = false;
                             var notebookAnimationFinished = false;
-                            GameFiber.StartNew(delegate
+                            try
                             {
+                                notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
+                                notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+
+                                var taskPullsOutNotebook = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@enter"), "enter", 2f, AnimationFlags.None);
+                                GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
+                                Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                GameFiber.Sleep(4000);
+
+                                var watchClock = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_b", 2f, AnimationFlags.None);
+                                GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
+
+                                Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                GameFiber.Sleep(2500);
+                                if (Units[0].UnitOfficers.Count != 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
+                                GameFiber.Sleep(200);
+
+                                //task ped to go to his car
+                                if (randomizer.Next(0, 2) == 0) { 
+                                    seperateThem = true;
+                                    Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                                }
+
+                                var looksAround = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_c", 2f, AnimationFlags.None);
+                                GameFiber.SleepUntil(() => looksAround.CurrentTimeRatio > 0.92f, 10000);
+
+                                Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                GameFiber.Sleep(4000);
+
+                                var putNotebookBack = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@exit"), "exit", 2f, AnimationFlags.None);
+                                GameFiber.SleepUntil(() => !putNotebookBack.IsActive, 10000);
+                                if (notepad) notepad.Delete();
+                                Units[0].UnitOfficers[0].Tasks.Clear();
+                                notebookAnimationFinished = true;
+                            }
+                            catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in while tasking Animation: {e}"); }
+
+
+
+                            if (seperateThem)
+                            {
+                                try
+                                {
+                                    int count = 0;
+
+                                    if (Suspects[0]) Suspects[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[1].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                                    GameFiber.Sleep(600);
+
+                                    while (
+                                        Units[0].UnitOfficers[0].Position.DistanceTo(SuspectsVehicles[0].GetOffsetPosition(new Vector3(2.5f + 1.8f, -1f, 0f))) > 2f 
+                                     || Units[0].UnitOfficers[1].Position.DistanceTo(SuspectsVehicles[0].GetOffsetPosition(new Vector3(2.5f + 1.8f, +2f, 0f))) > 2f
+                                     || count > 30
+                                    )
+                                    {
+
+                                        if (!NativeFunction.Natives.GET_IS_TASK_ACTIVE<bool>(Units[0].UnitOfficers[0], 35))
+                                            Units[0].UnitOfficers[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].GetOffsetPosition(new Vector3(2.5f + 1.8f, -1f, 0f)), heading + 69f, 1f, 1f, 20000);
+
+                                        if (!NativeFunction.Natives.GET_IS_TASK_ACTIVE<bool>(Units[0].UnitOfficers[1], 35))
+                                            Units[0].UnitOfficers[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].GetOffsetPosition(new Vector3(2.5f + 1.8f, +2f, 0f)), heading + 110f, 1f, 1f, 20000);  //Note: steht am weitesten vorne von allen personen am unfall
+                                    
+                                        count++;
+                                        GameFiber.Sleep(1000);
+                                    }
+
+                                    Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                                    Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+
+                                } catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in while tasking Animation: {e}"); }
+
+                                notebookAnimationFinished = false;
                                 try
                                 {
                                     notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
@@ -226,18 +293,32 @@ namespace MVA
                                     Units[0].UnitOfficers[0].Tasks.Clear();
                                     notebookAnimationFinished = true;
                                 }
-                                catch (System.Threading.ThreadAbortException) { }
-                                catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
-                            }, $"[AmbientAICallouts] [AiCallout MVA] Animation maker Fiber");
+                                catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in while tasking Animation: {e}"); }
+                            }
 
-                            GameFiber.SleepUntil(() => notebookAnimationFinished, 50000);
                             senarioTaskAsigned = true;
-                            GameFiber.Sleep(2000);
+
+                            var ped0Status = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(Suspects[0]);
+                            var ped1Status = LSPD_First_Response.Mod.API.Functions.GetPersonaForPed(Suspects[1]);
+
+                            if (ped0Status.Wanted == true || ped0Status.ELicenseState != LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Valid
+                             || ped1Status.Wanted == true || ped1Status.ELicenseState != LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Valid
+                            )
+                            {
+                                var Arrest = LSPDFR_Functions.CreatePursuit();
+                                LSPDFR_Functions.SetPursuitInvestigativeMode(Arrest, true);
+                                foreach (var ofc in Units[0].UnitOfficers) LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
+                                if (ped0Status.Wanted == true || ped0Status.ELicenseState != LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Valid) LSPDFR_Functions.AddPedToPursuit(Arrest, Suspects[0]);
+                                if (ped1Status.Wanted == true || ped1Status.ELicenseState != LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Valid) LSPDFR_Functions.AddPedToPursuit(Arrest, Suspects[1]);
+                            }
+
+
+
 
                             //Peds Leave, Cops Aproach own vehicle
                             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
                             AiCandHA_DismissHelicopter();
-                            foreach (var suspect in Suspects) if (suspect) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); }
+                            foreach (var suspect in Suspects) if (suspect) { if (!IsPedOccupiedbyLSPDFRInteraction(suspect)) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); } else { suspect.IsPersistent = false; } }
                             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
                             if (Units[0].UnitOfficers.Count != 1)
                             {
@@ -807,6 +888,25 @@ namespace MVA
             finished = true;
             EnterAndDismiss(Units[0]);
         }
+
+        private bool IsPedOccupiedbyLSPDFRInteraction(Ped ped)
+        {
+            if (
+                   LSPDFR_Functions.IsPedArrested(ped)
+                || LSPDFR_Functions.IsPedBeingCuffed(ped)
+                || LSPDFR_Functions.IsPedBeingFrisked(ped)
+                || LSPDFR_Functions.IsPedBeingGrabbed(ped)
+                || LSPDFR_Functions.IsPedInPursuit(ped)
+                )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         private static bool IsExternalPluginRunning(string plugin, Version minimumVersion)
         {
             foreach (Assembly assembly in LSPD_First_Response.Mod.API.Functions.GetAllUserPlugins())
