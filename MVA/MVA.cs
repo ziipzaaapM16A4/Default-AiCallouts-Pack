@@ -19,7 +19,10 @@ namespace MVA
         private bool finished = false;
         private bool senarioTaskAsigned;
         private static Random randomizer = new Random();
+        private Version stpVersion = new Version("4.9.4.7");
         private bool isSTPRunning;
+        internal bool suspectFirskedOverSTP = false;
+        internal bool suspectArrestedOverSTP = false;
 
         public override bool Setup()
         {
@@ -27,6 +30,7 @@ namespace MVA
             {
                 SceneInfo = "Motor Vehicle Accident";
                 CalloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
+                if (IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
                 int trys = 0;
@@ -829,6 +833,7 @@ namespace MVA
         private void Suspect2Flees()
         {
             LogTrivialDebug_withAiC(" DEBUG: Suspect2Flees() entered");
+            if (isSTPRunning) ExternalPluginSupport.logInEvents(this);          //Stp Support
             LSPDFR_Functions.AddPedContraband(Suspects[1], LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
 
             int i = 0;
@@ -855,6 +860,7 @@ namespace MVA
                 AiCandHA_AddHelicopterToPursuit(pursuit);
                 GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
             }
+            if (isSTPRunning) try { ExternalPluginSupport.logOutEvents(this); } catch { }          //Stp Support
         }
 
         private void NothingHappens()
@@ -918,6 +924,40 @@ namespace MVA
                 }
             }
             return false;
+        }
+
+
+        internal void Events_patDownPedEvent(Ped ped)
+        {
+            if (ped == Suspects[1])
+            {
+                suspectFirskedOverSTP = true;
+            }
+        }
+
+        internal void Events_pedArrestedEvent(Ped ped)
+        {
+            if (ped == Suspects[1])
+            {
+                suspectArrestedOverSTP = true;
+            }
+        }
+    }
+
+    internal class ExternalPluginSupport
+    {
+        //STP
+        internal static void logInEvents(MVA mva)
+        {
+
+            StopThePed.API.Events.patDownPedEvent += mva.Events_patDownPedEvent;
+            StopThePed.API.Events.pedArrestedEvent += mva.Events_pedArrestedEvent;
+        }
+
+        internal static void logOutEvents(MVA mva)
+        {
+            StopThePed.API.Events.patDownPedEvent -= mva.Events_patDownPedEvent;
+            StopThePed.API.Events.pedArrestedEvent -= mva.Events_pedArrestedEvent;
         }
     }
 }
