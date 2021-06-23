@@ -20,7 +20,7 @@ namespace MVA
         private bool senarioTaskAsigned;
         private static Random randomizer = new Random();
         private Version stpVersion = new Version("4.9.4.7");
-        private bool isSTPRunning;
+        private bool isSTPRunning = false;
         internal bool suspectFirskedOverSTP = false;
         internal bool suspectArrestedOverSTP = false;
 
