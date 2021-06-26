@@ -837,13 +837,13 @@ namespace MVA
             LSPDFR_Functions.AddPedContraband(Suspects[1], LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
 
             int i = 0;
-            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && i <= 2 * 60/*sekunden*/   )
+            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) || suspectFirskedOverSTP && i <= 2 * 60/*sekunden*/   )
             {
                 i++;
                 GameFiber.Sleep(500);
             }
 
-            if (LSPDFR_Functions.IsPedArrested(Suspects[1]))
+            if (LSPDFR_Functions.IsPedArrested(Suspects[1]) || suspectArrestedOverSTP)
             {
                 Game.DisplaySubtitle("~b~Officer~w~: Great. " + (Units[0].UnitOfficers.Count == 1 ? "I" : "We") + " finished here too. Thanks for the Backup", 6000);
             }
