@@ -7,6 +7,7 @@ using AmbientAICallouts;
 using AmbientAICallouts.API;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace ShotsFired
 {
@@ -16,6 +17,9 @@ namespace ShotsFired
 
         bool playerInvolved = false;
         Random randomizer = new Random();
+        LSPD_First_Response.Mod.API.LHandle pursuit;
+        GameFiber acr_Instance;
+
         public override bool Setup()
         {
             //Code for setting the scene. return true when Succesfull. 
@@ -125,9 +129,8 @@ namespace ShotsFired
                 bool someoneSpottedSuspect = false;
                 bool playerSpottedSuspect = false;
                 bool suspectflees = false;
-                LSPD_First_Response.Mod.API.LHandle pursuit = LSPDFR_Functions.CreatePursuit();
 
-                LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, false);
+                pursuit = LSPDFR_Functions.CreatePursuit();
                 LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[0]);
                 LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
@@ -159,28 +162,26 @@ namespace ShotsFired
                         //Player Spottet Suspect
                         if (!someoneSpottedSuspect && !playerSpottedSuspect)
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 45f + (playerRespondingInAdditon ? 20f : 0f)) {
+                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 30f + (playerRespondingInAdditon ? 20f : 0f)) {
                                 LogVerboseDebug_withAiC("player has visual on suspect");
                                 playerInvolved = true;
                                 //someoneSpottedSuspect = true;
                                 playerSpottedSuspect = true;
-                                LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);                  //what should i do? the player cannot get into pursuit after reporting 
-                                                                                                                //maybe due to the SetPursuitAsCalledIn(pursuit, false)
-                                LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);                          //problem: not beeing able to repot the pursuit. no pursuit radar?
+                                LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                                ACTION_CRIME_REPORT_replica();
                             }
 
 
-                        //wenn player nach ai suspect sieht
+                        //Wenn Player nach der Ai den Suspect sieht.
                         if (someoneSpottedSuspect && !playerSpottedSuspect)
                         {
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 70f)
+                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 40f + (playerRespondingInAdditon ? 30f : 0f))
                             {
                                 LogVerboseDebug_withAiC("player has now visual on suspect too");
                                 playerInvolved = true;
                                 playerSpottedSuspect = true;
                                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                                //LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);               //the solution? no its not because the officer still wouldn't be able to call in the pursuit
                             }
                         }
 
@@ -201,10 +202,10 @@ namespace ShotsFired
                                     if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(o, Suspects[0])
                                         && o.DistanceTo(Suspects[0]) < 50f)
                                     {
-                                        LogVerboseDebug_withAiC("cop" + o + "has visual on suspect");
+                                        LogVerboseDebug_withAiC("Officer " + o + " has visual on suspect");
                                         someoneSpottedSuspect = true;
-                                        if (playerSpottedSuspect) LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);
-                                        LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, true);
+                                        if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit))
+                                            callInPursuit();
                                     }
 
                                 if (someoneSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
@@ -220,7 +221,7 @@ namespace ShotsFired
 
                                 //Arrived at the Scene - Get out
                                 if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
-                                && u.PoliceVehicle.Speed == 0
+                                && u.PoliceVehicle.Speed <= 0.2
                                 && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
                                 && !someoneSpottedSuspect)
                                 {
@@ -292,6 +293,50 @@ namespace ShotsFired
             }
         }
 
+        private void ACTION_CRIME_REPORT_replica()
+        {
+            if (acr_Instance == null)
+            {
+                acr_Instance = GameFiber.StartNew(delegate
+                {
+                    try
+                    {
+                        int taktCounter = 0;
+                        while (LSPDFR_Functions.IsPursuitStillRunning(pursuit) && !LSPDFR_Functions.IsPursuitCalledIn(pursuit))
+                        {
+                            if (Game.IsKeyDownRightNow(Keys.B))
+                            { //static: Defined to B but what if ACTION_CRIME_REPORT is in LSPDFR set as something else
+
+                                //ToDo: write down with RNUI the ACtionbutton bahvior
+
+                                //TMP
+                                callInPursuit();
+                            }
+
+                            if (taktCounter % 800 == 0) Game.DisplayHelp("Press B to call in the pursuit");
+                            taktCounter++;
+                            GameFiber.Sleep(10);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogTrivial_withAiC("ERROR: in AiCallout object: At ACTION_CRIME_REPORT_replica(): " + e);
+                    }
+                    finally { acr_Instance = null; }
+                }, "AAIC-ShotsFired - ACTION_CRIME_REPORT replica instance");
+            }
+        }
+
+        private void callInPursuit()
+        {
+            //ToDo: simulate an new fresh started pursuit that is called in.
+            LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);
+            if (playerRespondingInAdditon)
+                Game.DisplayNotification("", "", "pursuit initiated", "asfdas", "sadföklj"); //ToDo: ersetzte felder.
+            LSPDFR_Functions.PlayScannerAudioUsingPosition("ATTENTION_ALL_UNITS WE_HAVE A CRIME_SUSPECT_RESISTING_ARREST IN_OR_ON_POSITION", Location); //ToDo: Teste parameter der dispatch ruf function
+
+        }
+
         private Ped getClosestOfficer()
         {
             var list = Suspects[0].GetNearbyPeds(12);
@@ -309,27 +354,6 @@ namespace ShotsFired
             return null;
         }
 
-        private LSPD_First_Response.Mod.API.LHandle InitiatePursuit()
-        {
-            var firstShotDurration = 3000;
-            var pursuit = LSPDFR_Functions.CreatePursuit();
-            foreach (var suspect in Suspects)
-            {
-                if (new Random().Next(2) == 0) { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { suspect.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
-                LSPDFR_Functions.AddPedToPursuit(pursuit, suspect);
-
-                LSPDFR_Functions.SetPursuitDisableAIForPed(suspect, true);
-                suspect.Tasks.FireWeaponAt(Units[0].PoliceVehicle, firstShotDurration + 2000, FiringPattern.BurstFire);
-            }
-
-            foreach (var cop in Units[0].UnitOfficers)
-            {
-                LSPDFR_Functions.AddCopToPursuit(pursuit, cop);
-            }
-
-            GameFiber.Sleep(firstShotDurration);
-            return pursuit;
-        }
 
         public override bool End()
         {
