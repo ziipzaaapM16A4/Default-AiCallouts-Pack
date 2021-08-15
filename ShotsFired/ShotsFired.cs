@@ -8,6 +8,7 @@ using AmbientAICallouts.API;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using System.Linq;
 using System.Windows.Forms;
+using RAGENativeUI;
 
 namespace ShotsFired
 {
@@ -18,7 +19,6 @@ namespace ShotsFired
         bool playerInvolved = false;
         Random randomizer = new Random();
         LSPD_First_Response.Mod.API.LHandle pursuit;
-        GameFiber acr_Instance;
 
         public override bool Setup()
         {
@@ -129,6 +129,11 @@ namespace ShotsFired
                 bool someoneSpottedSuspect = false;
                 bool playerSpottedSuspect = false;
                 bool suspectflees = false;
+                RAGENativeUI.Elements.TimerBarPool timerBarPool = null;
+                RAGENativeUI.Elements.BarTimerBar progressbar = null;
+
+                int tickcounter = 0;    //to count sleep processes to reach a specifc time.
+                bool acr_active = false;
 
                 pursuit = LSPDFR_Functions.CreatePursuit();
                 LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);
@@ -152,25 +157,41 @@ namespace ShotsFired
                         //-------------------------------------- Player -----------------------------------------------------
                         #region Officer Tasks
                         //If Player is near enough to the scene and other units spotted the suspect already => auto pursuit
-                        if (someoneSpottedSuspect 
-                            && !playerSpottedSuspect
-                            && (Game.LocalPlayer.Character.DistanceTo(Suspects[0]) < 65f || Game.LocalPlayer.Character.DistanceTo(Location) <= arrivalDistanceThreshold)
-                            )
-                            LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                        //if (someoneSpottedSuspect 
+                        //    && !playerSpottedSuspect
+                        //    && (Game.LocalPlayer.Character.DistanceTo(Suspects[0]) < 26f || Game.LocalPlayer.Character.DistanceTo(Location) <= arrivalDistanceThreshold)
+                        //    )
+                        //    LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true); //no autodetect
 
 
                         //Player Spottet Suspect
                         if (!someoneSpottedSuspect && !playerSpottedSuspect)
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 30f + (playerRespondingInAdditon ? 20f : 0f)) {
+                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 25f + (playerRespondingInAdditon ? 15f : 0f)) {
                                 LogVerboseDebug_withAiC("player has visual on suspect");
                                 playerInvolved = true;
                                 //someoneSpottedSuspect = true;
                                 playerSpottedSuspect = true;
                                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-                                ACTION_CRIME_REPORT_replica();
+                                acr_active = true;
+                                timerBarPool = new RAGENativeUI.Elements.TimerBarPool();
+                                progressbar = new RAGENativeUI.Elements.BarTimerBar("Reporting PC503");
+                                progressbar.ForegroundColor = System.Drawing.Color.Red;
+                                timerBarPool.Add(progressbar);
                             }
 
+                        if (acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 20f) //Crime Spottet & player is in area
+                        {
+                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you encounter a crime or the suspect flees, \nreport it by holding ~t_B~", 10000); //10 sekunden warten
+                            if (Game.IsKeyDownRightNow(Keys.B))
+                            {
+                                progressbar.Percentage += 5f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%#
+                                timerBarPool.Draw();
+                            } else {
+                                progressbar.Percentage = 0f;
+                            }
+                            if (progressbar.Percentage >= 100f) { acr_active = false; timerBarPool.Remove(progressbar); callInPursuit(); }
+                        }
 
                         //Wenn Player nach der Ai den Suspect sieht.
                         if (someoneSpottedSuspect && !playerSpottedSuspect)
@@ -251,11 +272,11 @@ namespace ShotsFired
                         }
                         #endregion
                     }
-
+                    tickcounter++;
                     GameFiber.Sleep(100);
                 }
 
-                //_------------------------------------------------------------------------------ Wenn niemand mehr schießt
+                //------------------------------------------------------------------------------ Wenn niemand mehr schießt
                 if (false) ;
 
 
@@ -290,40 +311,6 @@ namespace ShotsFired
             {
                 LogTrivial_withAiC("ERROR: in AiCallout object: At Process(): " + e);
                 return false;
-            }
-        }
-
-        private void ACTION_CRIME_REPORT_replica()
-        {
-            if (acr_Instance == null)
-            {
-                acr_Instance = GameFiber.StartNew(delegate
-                {
-                    try
-                    {
-                        int taktCounter = 0;
-                        while (LSPDFR_Functions.IsPursuitStillRunning(pursuit) && !LSPDFR_Functions.IsPursuitCalledIn(pursuit))
-                        {
-                            if (Game.IsKeyDownRightNow(Keys.B))
-                            { //static: Defined to B but what if ACTION_CRIME_REPORT is in LSPDFR set as something else
-
-                                //ToDo: write down with RNUI the ACtionbutton bahvior
-
-                                //TMP
-                                callInPursuit();
-                            }
-
-                            if (taktCounter % 800 == 0) Game.DisplayHelp("Press B to call in the pursuit");
-                            taktCounter++;
-                            GameFiber.Sleep(10);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        LogTrivial_withAiC("ERROR: in AiCallout object: At ACTION_CRIME_REPORT_replica(): " + e);
-                    }
-                    finally { acr_Instance = null; }
-                }, "AAIC-ShotsFired - ACTION_CRIME_REPORT replica instance");
             }
         }
 
