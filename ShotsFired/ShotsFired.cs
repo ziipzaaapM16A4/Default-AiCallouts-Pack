@@ -9,6 +9,7 @@ using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using System.Linq;
 using System.Windows.Forms;
 using RAGENativeUI;
+using System.Collections.Generic;
 
 namespace ShotsFired
 {
@@ -19,6 +20,11 @@ namespace ShotsFired
         bool playerInvolved = false;
         Random randomizer = new Random();
         LSPD_First_Response.Mod.API.LHandle pursuit;
+
+        Keys ACTION_CRIME_REPORT_key;
+        Keys ACTION_CRIME_REPORT_modifier_key;
+        ControllerButtons ACTION_CRIME_REPORT_button;
+        ControllerButtons ACTION_CRIME_REPORT_modifier_button;    
 
         public override bool Setup()
         {
@@ -32,6 +38,8 @@ namespace ShotsFired
                 CalloutDetailsString = "CRIME_SHOTS_FIRED";
                 arrivalDistanceThreshold = 30f;
                 #endregion
+
+                CopyLspdlfr_Action_Crime_Report_Inputs();
 
                 #region Spawnpoint searching
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
@@ -182,8 +190,8 @@ namespace ShotsFired
 
                         if (acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 20f) //Crime Spottet & player is in area
                         {
-                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you encounter a crime or the suspect flees, \nreport it by holding ~t_B~", 10000); //10 sekunden warten
-                            if (Game.IsKeyDownRightNow(Keys.B))
+                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you encounter a crime or the suspect flees, \nreport it by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalKey()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
+                            if (ACTION_CRIME_REPORT_pressed())
                             {
                                 progressbar.Percentage += 5f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%#
                                 timerBarPool.Draw();
@@ -360,5 +368,79 @@ namespace ShotsFired
             }
         }
 
+
+        private bool ACTION_CRIME_REPORT_pressed()
+        {
+            return         //Either key is pressed               und                      modifier_key is null              or modifier_key is pressed
+                (  Game.IsKeyDownRightNow(ACTION_CRIME_REPORT_key) && (ACTION_CRIME_REPORT_modifier_key == Keys.None ? true : Game.IsKeyDownRightNow(ACTION_CRIME_REPORT_modifier_key))
+                || Game.IsControllerButtonDownRightNow(ACTION_CRIME_REPORT_button) && (ACTION_CRIME_REPORT_modifier_button == ControllerButtons.None ? true : Game.IsControllerButtonDownRightNow(ACTION_CRIME_REPORT_modifier_button))  );
+        }
+
+        private void CopyLspdlfr_Action_Crime_Report_Inputs()
+        {
+            InitializationFile LSPDFR_keys;
+            int settingsCounter = 4;      //Indicates how many bools are needed for for the settings in order to work.
+            List<bool> successfullySetup = new List<bool>(); for (int i = 0; i < settingsCounter; i++) { successfullySetup.Add(false); }
+            bool settingsOK;
+
+            try
+            {
+                LogTrivialDebug_withAiC("[initialization] DEBUG: Attempting to load lspdfr/keys.ini to get LSPDFR settings for ACTION CRIME REPORT input");
+                LSPDFR_keys = new InitializationFile("lspdfr/keys.ini"); //ToDo: checked for correct file name. Verify this
+                LSPDFR_keys.Create();
+                LogTrivialDebug_withAiC("[initialization] DEBUG: lspdfr/keys.ini file loaded successfully");
+
+                KeysConverter kc = new KeysConverter();
+                List<Keys> keyList = new List<Keys>();
+
+                LogTrivialDebug_withAiC("[initialization] DEBUG: Attempt to read settings");                                                          //ToDo: check names from lspdfr ini or lspdfr docs
+                try { ACTION_CRIME_REPORT_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("AmbientResponse", "RespondToAiCAsSecondary_Key", "X")); successfullySetup[0] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_key"); }
+                try { ACTION_CRIME_REPORT_modifier_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("AmbientResponse", "RespondToAiCAsSecondary_ModifierKey", "LControlKey")); successfullySetup[1] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_key"); }
+                try { ACTION_CRIME_REPORT_button = LSPDFR_keys.ReadEnum<ControllerButtons>("AmbientResponse", "RespondToAiCAsSecondary_Button", ControllerButtons.None); successfullySetup[2] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_button"); }
+                try { ACTION_CRIME_REPORT_modifier_button = LSPDFR_keys.ReadEnum<ControllerButtons>("AmbientResponse", "RespondToAiCAsSecondary_ModifierButton", ControllerButtons.None); successfullySetup[3] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_button"); }
+
+
+                bool allOK = true;
+                foreach (bool ok in successfullySetup) { if (ok == false) allOK = false; }
+
+                if (allOK)
+                {
+                    Game.LogTrivial($"[AmbientAICallouts] [initialization] INFO: Successfully read settings");
+                    settingsOK = true;
+                }
+                else
+                {
+                    Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Reading settings ERROR");
+                    settingsOK = false;
+                }
+
+            }
+            catch (System.Threading.ThreadAbortException) { settingsOK = false; }
+            catch (Exception e)
+            {
+                LogTrivial_withAiC($"[initialization] WARNING: Fatal error reading LSPDFR keys from lspdfr/keys.ini, make sure your preferred settings are valid. Applying all default settings!");
+                LogTrivial_withAiC($"[initialization] WARNING: error MSG{e}");
+                settingsOK = false;
+
+                ACTION_CRIME_REPORT_key = Keys.B;
+                ACTION_CRIME_REPORT_modifier_key = Keys.None;
+                ACTION_CRIME_REPORT_button = ControllerButtons.DPadDown; //ToDo: verifiy the standard button.
+                ACTION_CRIME_REPORT_modifier_button = ControllerButtons.None;
+
+            }
+
+            if (!settingsOK)
+            {
+                if (successfullySetup[0] == false) ACTION_CRIME_REPORT_key = Keys.X;
+                if (successfullySetup[1] == false) ACTION_CRIME_REPORT_modifier_key = Keys.LControlKey;
+                if (successfullySetup[2] == false) ACTION_CRIME_REPORT_button = ControllerButtons.None;
+                if (successfullySetup[3] == false) ACTION_CRIME_REPORT_modifier_button = ControllerButtons.None;
+            }
+
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout key = " + ACTION_CRIME_REPORT_key);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout modifier key = " + ACTION_CRIME_REPORT_modifier_key);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout button = " + ACTION_CRIME_REPORT_button);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout modifier button = " + ACTION_CRIME_REPORT_modifier_button);
+        }
     }
 }
