@@ -166,9 +166,12 @@ namespace MVA
 
                     if (playerRespondingInAdditon)
                     {
-                        Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
                         Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                        Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                        if (Units[0].UnitOfficers.Count > 1)
+                        {
+                            Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                            Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                        }
                         for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
                         
                         if (Suspects.Count == 1)
