@@ -965,6 +965,7 @@ namespace MVA
             if (ped == Suspects[1])
             {
                 suspectFirskedOverSTP = true;
+                StopThePed.API.Functions.injectPedSearchItems(Suspects[1]);
             }
         }
 
