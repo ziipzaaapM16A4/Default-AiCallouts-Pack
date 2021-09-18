@@ -326,7 +326,7 @@ namespace MVA
 
                             //Peds Leave, Cops Aproach own vehicle
                             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
-                            AiCandHA_DismissHelicopter();
+                            Functions.AiCandHA_DismissHelicopter(MO);
                             foreach (var suspect in Suspects) if (suspect) { if (!IsPedOccupiedbyLSPDFRInteraction(suspect)) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); } else { suspect.IsPersistent = false; } }
                             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
                             if (Units[0].UnitOfficers.Count != 1)
@@ -834,7 +834,7 @@ namespace MVA
             Units[0].UnitOfficers[0].PlayAmbientSpeech(null, "FOOT_CHASE", 0, SpeechModifier.Force);
             GameFiber.Sleep(12000);
             LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-            AiCandHA_AddHelicopterToPursuit(pursuit);
+            Functions.AiCandHA_AddHelicopterToPursuit(MO, pursuit);
             GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
             //ISSUE: Officers & Peds get Dismissed before the Arrest is fullfilled.
         }
@@ -865,7 +865,7 @@ namespace MVA
                 GameFiber.Sleep(1800);
                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                 if (Units[0].UnitOfficers.Count > 1) LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[1]);
-                AiCandHA_AddHelicopterToPursuit(pursuit);
+                Functions.AiCandHA_AddHelicopterToPursuit(MO, pursuit);
                 GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
             }
             if (isSTPRunning) try { ExternalPluginSupport.logOutEvents(this); } catch { }          //Stp Support
@@ -914,7 +914,7 @@ namespace MVA
 
             //Peds Leave, Cops Aproach own vehicle
             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
-            AiCandHA_DismissHelicopter();
+            Functions.AiCandHA_DismissHelicopter(MO);
             foreach (var suspect in Suspects) if (suspect) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); }
             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
             if (Units[0].UnitOfficers.Count != 1)

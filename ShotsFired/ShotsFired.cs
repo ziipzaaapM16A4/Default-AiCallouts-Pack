@@ -56,7 +56,7 @@ namespace ShotsFired
                 }
                 #endregion
 
-                SetupSuspects(1);  //need to stay 1. more would result that in a callout the rest would flee due to the way the - AAIC Backup requests-LSPFR Callouts work.
+                Functions.SetupSuspects(MO, 1);  //need to stay 1. more would result that in a callout the rest would flee due to the way the - AAIC Backup requests-LSPFR Callouts work.
 
                 #region Tasking Suspect
                 GameFiber.StartNew(delegate {

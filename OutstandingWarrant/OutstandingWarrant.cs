@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Rage;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using AmbientAICallouts.API;
-using LSPD_First_Response.Mod.API;
 using System.Xml;
 
 namespace OutstandingWarrant
@@ -52,7 +51,7 @@ namespace OutstandingWarrant
                 CalloutDetailsString = "OUTSTANDING_WARRANT";
                arrivalDistanceThreshold = 15f;
 
-                SetupSuspects(1);
+                Functions.SetupSuspects(MO, 1);
                 //Suspects[0].Model = new Model("");   //find a better moddel. it would be great if they would be just mean from gangs
                 Suspects[0].Position = nextLocation.Position;
                 Suspects[0].Heading = nextLocation.Heading;

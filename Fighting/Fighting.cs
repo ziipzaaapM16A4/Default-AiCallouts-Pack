@@ -32,7 +32,7 @@ namespace Fighting
                 }
                 arrivalDistanceThreshold = 14f;
                 CalloutDetailsString = "CRIME_ASSAULT";
-                SetupSuspects(2);
+                Functions.SetupSuspects(MO, 2);
 
                 Suspects[0].Tasks.FightAgainst(Suspects[1]);
                 Suspects[1].Tasks.FightAgainst(Suspects[0]);
