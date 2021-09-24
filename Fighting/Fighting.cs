@@ -66,7 +66,7 @@ namespace Fighting
         {
             try
             {
-                if (!IsUnitInTime(Units[0].PoliceVehicle, 100f, 130))  //if vehicle is never reaching its location
+                if (!IsUnitInTime(Units[0], 100f, 130))  //if vehicle is never reaching its location
                 {
                     Disregard();
                 }

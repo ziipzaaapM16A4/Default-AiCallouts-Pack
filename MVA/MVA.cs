@@ -58,7 +58,7 @@ namespace MVA
                 }
 
                 //spawn 2 vehicles at the side of the road
-                AmbientAICallouts.API.Functions.CleanArea(roadside, 25f);
+                AmbientAICallouts.API.Helper.CleanArea(roadside, 25f);
                 SuspectsVehicles.Add(new Vehicle(carModelList[randomizer.Next(0, carModelList.Count)], roadside, heading) { IsEngineOn = true, IndicatorLightsStatus = VehicleIndicatorLightsStatus.Both });
                 SuspectsVehicles.Add(new Vehicle(carModelList[randomizer.Next(0, carModelList.Count)], SuspectsVehicles[0].GetOffsetPositionFront(-6f), heading) { IsEngineOn = true, IndicatorLightsStatus = VehicleIndicatorLightsStatus.Both });
                 DeformBack(SuspectsVehicles[0]);
@@ -126,7 +126,7 @@ namespace MVA
             try
             {
                 LogTrivialDebug_withAiC($"DEBUG: Waiting for Cops to Arrive");
-                if (!IsUnitInTime(Units[0].PoliceVehicle, 100f, 130))  //if vehicle is never reaching its location
+                if (!IsUnitInTime(Units[0], 100f, 130))  //if vehicle is never reaching its location
                 {
                     Disregard();
                 }
@@ -885,7 +885,7 @@ namespace MVA
 
             //Peds Leave, Cops Aproach own vehicle
             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
-            AiCandHA_DismissHelicopter();
+            Functions.AiCandHA_DismissHelicopter(MO);
             foreach (var suspect in Suspects) if (suspect) { if (!IsPedOccupiedbyLSPDFRInteraction(suspect)) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); } else { suspect.IsPersistent = false; } }
             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
             if (Units[0].UnitOfficers.Count != 1)

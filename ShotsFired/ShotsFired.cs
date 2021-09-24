@@ -105,7 +105,7 @@ namespace ShotsFired
                 foreach (var unit in Units)
                 {
                     GameFiber.StartNew(delegate{
-                        var tmpUnit = unit.PoliceVehicle;
+                        var tmpUnit = unit;
                         try {
                             if (!IsUnitInTime(tmpUnit, arrivalDistanceThreshold + 40f, 130))  //if vehicle is never reaching its location
                             {

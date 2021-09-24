@@ -79,7 +79,7 @@ namespace OutstandingWarrant
             try
             {
                 bool complyingArrest = (new Random().Next(100) < 75 ? true : false);
-                if (!IsUnitInTime(Units[0].PoliceVehicle, 150f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
+                if (!IsUnitInTime(Units[0], 150f, 130))  //if vehicle is never reaching its location                                                          //loger so that player can react
                 {
                     Disregard();
                 } else 
