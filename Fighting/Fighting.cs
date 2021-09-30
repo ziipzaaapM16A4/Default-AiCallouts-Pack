@@ -22,9 +22,11 @@ namespace Fighting
                 SceneInfo = "Fighting";
                 bool posFound = false;
                 int trys = 0;
+                Vector3 tmp = new Vector3();
                 while (!posFound && trys < 20)
                 {
-                    Location = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    Rage.Native.NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>( Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f), true, out tmp, 16);
+                    Location = tmp;
                     if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
                      && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
                         posFound = true;
