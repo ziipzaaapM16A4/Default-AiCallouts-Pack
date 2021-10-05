@@ -58,11 +58,11 @@
     <Reference Include="LSPD First Response">
       <HintPath>..\..\..\SDK\LSPD First Response.dll</HintPath>
     </Reference>
-    <Reference Include="RAGENativeUI">
-      <HintPath>..\..\..\SDK\RAGENativeUI.dll</HintPath>
+    <Reference Include="RAGENativeUI, Version=1.8.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\..\..\packages\RAGENativeUI.1.8.1\lib\net472\RAGENativeUI.dll</HintPath>
     </Reference>
-    <Reference Include="RagePluginHookSDK">
-      <HintPath>..\..\..\SDK\RagePluginHookSDK.dll</HintPath>
+    <Reference Include="RagePluginHook, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\..\..\packages\RagePluginHook.1.86.1\lib\net472\RagePluginHook.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -78,6 +78,9 @@
   <ItemGroup>
     <Compile Include="ShotsFired.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -39,7 +39,7 @@ namespace ShotsFired
                 arrivalDistanceThreshold = 30f;
                 #endregion
 
-                CopyLspdlfr_Action_Crime_Report_Inputs();
+                CopyLspdlfr_Action_Crime_Report_Inputs();    //ToDo: check names from lspdfr ini or lspdfr docs
 
                 #region Spawnpoint searching
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
@@ -171,7 +171,8 @@ namespace ShotsFired
                         }
 
                         suspectInvalidCounter++;
-                    } else
+                    }
+                    else
                     {
                         suspectInvalidCounter = 0;
                         //-------------------------------------- Player -----------------------------------------------------
@@ -187,7 +188,8 @@ namespace ShotsFired
                         //Player Spottet Suspect
                         if (!someoneSpottedSuspect && !playerSpottedSuspect)
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 25f + (playerRespondingInAdditon ? 15f : 0f)) {
+                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 25f + (playerRespondingInAdditon ? 15f : 0f))
+                            {
                                 LogVerboseDebug_withAiC("player has visual on suspect");
                                 playerInvolved = true;
                                 //someoneSpottedSuspect = true;
@@ -200,16 +202,30 @@ namespace ShotsFired
                                 timerBarPool.Add(progressbar);
                             }
 
-                        if (acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 20f) //Crime Spottet & player is in area
+                        //Player lost Suspect while unreported
+                        else if (!someoneSpottedSuspect && playerSpottedSuspect)
+                            if (!NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
+                                || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) > 25f + (playerRespondingInAdditon ? 15f : 0f))
+                            {
+                                    acr_active = false;
+                            }
+                    
+                        //Plyer found suspect but does not need visual because he is close enough
+                        if (acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 20f) //Crime Spottet & player is in area
                         {
                             if (tickcounter % 100 == 0) Game.DisplayHelp($"If you encounter a crime or the suspect flees, \nreport it by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalKey()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
                             if (ACTION_CRIME_REPORT_pressed())
                             {
-                                progressbar.Percentage += 5f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%#
+                                progressbar.Percentage += 5f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%
                                 timerBarPool.Draw();
-                            } else {
-                                progressbar.Percentage = 0f;
                             }
+                            else if (progressbar.Percentage > 0f)
+                            {
+                                progressbar.Percentage -= 10f; //1 sec = 10 ticks. 100 / 10 = 10; Proof: 10f * 10 ticks(oder 1 sek) = 100%
+                                timerBarPool.Draw();
+                            }
+                            
+                            
                             if (progressbar.Percentage >= 100f) { acr_active = false; timerBarPool.Remove(progressbar); callInPursuit(); }
                         }
 
@@ -217,7 +233,7 @@ namespace ShotsFired
                         if (someoneSpottedSuspect && !playerSpottedSuspect)
                         {
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) < 40f + (playerRespondingInAdditon ? 30f : 0f))
+                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 40f + (playerRespondingInAdditon ? 30f : 0f))
                             {
                                 LogVerboseDebug_withAiC("player has now visual on suspect too");
                                 playerInvolved = true;
@@ -359,7 +375,7 @@ namespace ShotsFired
             //ToDo: simulate an new fresh started pursuit that is called in.
             LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);
             if (playerRespondingInAdditon)
-                Game.DisplayNotification("", "", "pursuit initiated", "asfdas", "sadföklj"); //ToDo: ersetzte felder.
+                Game.DisplayNotification("", "CHAR_CALL911", "pursuit initiated", "asfdas", "sadföklj"); //ToDo: ersetzte felder.
             LSPDFR_Functions.PlayScannerAudioUsingPosition("ATTENTION_ALL_UNITS WE_HAVE A CRIME_SUSPECT_RESISTING_ARREST IN_OR_ON_POSITION", Location); //ToDo: Teste parameter der dispatch ruf function
 
         }
@@ -388,6 +404,7 @@ namespace ShotsFired
             //Example idea: Cops getting back into their vehicle. drive away dismiss the rest. after 90 secconds delete if possible entitys that have not moved away.
             try
             {
+                //ToDo: Cleanup RUNI elements
                 while (Game.LocalPlayer.Character.DistanceTo(Location) < 50f) GameFiber.Sleep(500);
                 if (Suspects[0]) Suspects[0].Delete();
                 return true;
@@ -449,7 +466,7 @@ namespace ShotsFired
                 KeysConverter kc = new KeysConverter();
                 List<Keys> keyList = new List<Keys>();
 
-                LogTrivialDebug_withAiC("[initialization] DEBUG: Attempt to read settings");                                                          //ToDo: check names from lspdfr ini or lspdfr docs
+                LogTrivialDebug_withAiC("[initialization] DEBUG: Attempt to read settings");   
                 try { ACTION_CRIME_REPORT_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("AmbientResponse", "RespondToAiCAsSecondary_Key", "X")); successfullySetup[0] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_key"); }
                 try { ACTION_CRIME_REPORT_modifier_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("AmbientResponse", "RespondToAiCAsSecondary_ModifierKey", "LControlKey")); successfullySetup[1] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_key"); }
                 try { ACTION_CRIME_REPORT_button = LSPDFR_keys.ReadEnum<ControllerButtons>("AmbientResponse", "RespondToAiCAsSecondary_Button", ControllerButtons.None); successfullySetup[2] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_button"); }
