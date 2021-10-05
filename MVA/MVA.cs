@@ -19,7 +19,10 @@ namespace MVA
         private bool finished = false;
         private bool senarioTaskAsigned;
         private static Random randomizer = new Random();
-        private bool isSTPRunning;
+        private Version stpVersion = new Version("4.9.4.7");
+        private bool isSTPRunning = false;
+        internal bool suspectFirskedOverSTP = false;
+        internal bool suspectArrestedOverSTP = false;
 
         public override bool Setup()
         {
@@ -27,6 +30,7 @@ namespace MVA
             {
                 SceneInfo = "Motor Vehicle Accident";
                 CalloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
+                if (IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
                 Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                 bool posFound = false;
                 int trys = 0;
@@ -54,7 +58,7 @@ namespace MVA
                 }
 
                 //spawn 2 vehicles at the side of the road
-                AmbientAICallouts.API.Functions.CleanArea(roadside, 25f);
+                AmbientAICallouts.API.Helper.CleanArea(roadside, 25f);
                 SuspectsVehicles.Add(new Vehicle(carModelList[randomizer.Next(0, carModelList.Count)], roadside, heading) { IsEngineOn = true, IndicatorLightsStatus = VehicleIndicatorLightsStatus.Both });
                 SuspectsVehicles.Add(new Vehicle(carModelList[randomizer.Next(0, carModelList.Count)], SuspectsVehicles[0].GetOffsetPositionFront(-6f), heading) { IsEngineOn = true, IndicatorLightsStatus = VehicleIndicatorLightsStatus.Both });
                 DeformBack(SuspectsVehicles[0]);
@@ -122,7 +126,7 @@ namespace MVA
             try
             {
                 LogTrivialDebug_withAiC($"DEBUG: Waiting for Cops to Arrive");
-                if (!IsUnitInTime(Units[0].PoliceVehicle, 100f, 130))  //if vehicle is never reaching its location
+                if (!IsUnitInTime(Units[0], 100f, 130))  //if vehicle is never reaching its location
                 {
                     Disregard();
                 }
@@ -166,9 +170,12 @@ namespace MVA
 
                     if (playerRespondingInAdditon)
                     {
-                        Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
                         Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                        Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                        if (Units[0].UnitOfficers.Count > 1)
+                        {
+                            Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                            Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                        }
                         for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
                         
                         if (Suspects.Count == 1)
@@ -189,7 +196,7 @@ namespace MVA
                         {
                             LogTrivial_withAiC($"INFO: chose selfhandle path");
                             //Officer 0 Notebook animation Fiber
-                            bool seperateThem = false;
+                            bool seperateThem = true;//randomizer.Next(0, 2) == 0;
                             var notebookAnimationFinished = false;
                             try
                             {
@@ -210,8 +217,8 @@ namespace MVA
                                 GameFiber.Sleep(200);
 
                                 //task ped to go to his car
-                                if (randomizer.Next(0, 2) == 0) { 
-                                    seperateThem = true;
+                                if (seperateThem) {
+                                    GameFiber.Sleep(400);
                                     Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
                                 }
 
@@ -237,7 +244,7 @@ namespace MVA
                                 {
                                     int count = 0;
 
-                                    if (Suspects[0]) Suspects[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[1].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                                    if (Suspects[0]) Suspects[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[1].RightPosition, SuspectsVehicles[1].Heading - 90f, 1f, 2f, 9000);
                                     GameFiber.Sleep(600);
 
                                     while (
@@ -310,6 +317,8 @@ namespace MVA
                                 foreach (var ofc in Units[0].UnitOfficers) LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
                                 if (ped0Status.Wanted == true || ped0Status.ELicenseState != LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Valid) LSPDFR_Functions.AddPedToPursuit(Arrest, Suspects[0]);
                                 if (ped1Status.Wanted == true || ped1Status.ELicenseState != LSPD_First_Response.Engine.Scripting.Entities.ELicenseState.Valid) LSPDFR_Functions.AddPedToPursuit(Arrest, Suspects[1]);
+                                while(LSPDFR_Functions.IsPursuitStillRunning(Arrest)) { GameFiber.Sleep(500); }
+                                GameFiber.Sleep(10000); //wait until ofc probably seated suspect
                             }
 
 
@@ -317,7 +326,7 @@ namespace MVA
 
                             //Peds Leave, Cops Aproach own vehicle
                             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
-                            AiCandHA_DismissHelicopter();
+                            Functions.AiCandHA_DismissHelicopter(MO);
                             foreach (var suspect in Suspects) if (suspect) { if (!IsPedOccupiedbyLSPDFRInteraction(suspect)) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); } else { suspect.IsPersistent = false; } }
                             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
                             if (Units[0].UnitOfficers.Count != 1)
@@ -345,93 +354,96 @@ namespace MVA
                             GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
                             Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
 
-                            GameFiber.Sleep(15000);
+                            GameFiber.Sleep(15000);                     //Because of this delay here
                             Units[0].UnitOfficers[0].Tasks.Clear();
                             senarioTaskAsigned = false;
                             finished = true;
-                            switch (randomizer.Next(0, 6))                                                                                                           //FOR VIDEO EDITING
+                            if (!LSPD_First_Response.Mod.API.Functions.IsCalloutRunning()) //we need to check again if the player is not in a call already so we wont take his ongoing call
                             {
-                                case 0:
-                                    UnitCallsForBackup("AAIC-OfficerDown");
-                                    break;
-                                case 1:
-                                    UnitCallsForBackup("AAIC-OfficerInPursuit");
-                                    break;
-                                case 2:
-                                    UnitCallsForBackup("AAIC-OfficerUnderFire");
-                                    break;
-                                default:
-                                    //Suspect leaves this discussion between suspect0 and the cops.   ++++++++   Cops turns to suspect 0;
-                                    Units[0].UnitOfficers[0].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
-                                    GameFiber.Sleep(2000);
-                                    Suspects[1].PlayAmbientSpeech(null, "GENERIC_WHATEVER", 0, SpeechModifier.Force);
-                                    GameFiber.Sleep(1000);
-                                    Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
-                                    Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                                    Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                                    for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
 
-                                    UnitCallsForBackup("AAIC-OfficerRequiringAssistance");
-                                    OffiverRequiringAssistanceUSED = true;
-                                    break;
-                            }
-
-
-                            if (OffiverRequiringAssistanceUSED)
-                            {
-                                GameFiber.StartNew(delegate
+                                switch (randomizer.Next(0, 6))
                                 {
-                                    try
+                                    case 0:
+                                        UnitCallsForBackup("AAIC-OfficerDown");
+                                        break;
+                                    case 1:
+                                        UnitCallsForBackup("AAIC-OfficerInPursuit");
+                                        break;
+                                    case 2:
+                                        UnitCallsForBackup("AAIC-OfficerUnderFire");
+                                        break;
+                                    default:
+                                        //Suspect leaves this discussion between suspect0 and the cops.   ++++++++   Cops turns to suspect 0;
+                                        Units[0].UnitOfficers[0].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
+                                        GameFiber.Sleep(2000);
+                                        Suspects[1].PlayAmbientSpeech(null, "GENERIC_WHATEVER", 0, SpeechModifier.Force);
+                                        GameFiber.Sleep(1000);
+                                        Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                                        Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                                        Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                                        for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
+
+                                        UnitCallsForBackup("AAIC-OfficerRequiringAssistance");
+                                        OffiverRequiringAssistanceUSED = true;
+                                        break;
+                                }
+
+
+                                if (OffiverRequiringAssistanceUSED)
+                                {
+                                    GameFiber.StartNew(delegate
                                     {
-                                        notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
-                                        notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+                                        try
+                                        {
+                                            notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
+                                            notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
 
-                                        if (Units[0].UnitOfficers[0])
-                                            if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
-                                            {
-                                                GameFiber.Sleep(4000);
-                                            }
+                                            if (Units[0].UnitOfficers[0])
+                                                if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
+                                                {
+                                                    GameFiber.Sleep(4000);
+                                                }
 
-                                        if (Units[0].UnitOfficers[0])
-                                            if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
-                                            {
-                                                var watchClock = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_b", 2f, AnimationFlags.None);
-                                                GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
-                                            }
+                                            if (Units[0].UnitOfficers[0])
+                                                if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
+                                                {
+                                                    var watchClock = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_b", 2f, AnimationFlags.None);
+                                                    GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
+                                                }
 
-                                        if (Units[0].UnitOfficers[0])
-                                            if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
-                                            {
-                                                Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
-                                                GameFiber.Sleep(2500);
-                                                if (Units[0].UnitOfficers.Count != 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
-                                                GameFiber.Sleep(200);
-                                            }
+                                            if (Units[0].UnitOfficers[0])
+                                                if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
+                                                {
+                                                    Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                                    GameFiber.Sleep(2500);
+                                                    if (Units[0].UnitOfficers.Count != 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
+                                                    GameFiber.Sleep(200);
+                                                }
 
-                                        if (Units[0].UnitOfficers[0])
-                                            if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
-                                            {
-                                                var looksAround = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_c", 2f, AnimationFlags.None);
-                                                GameFiber.SleepUntil(() => looksAround.CurrentTimeRatio > 0.92f, 10000);
-                                            }
+                                            if (Units[0].UnitOfficers[0])
+                                                if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
+                                                {
+                                                    var looksAround = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_c", 2f, AnimationFlags.None);
+                                                    GameFiber.SleepUntil(() => looksAround.CurrentTimeRatio > 0.92f, 10000);
+                                                }
 
-                                        if (Units[0].UnitOfficers[0])
-                                            if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
-                                            {
-                                                Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
-                                                GameFiber.Sleep(31000);
-                                            }
-                                        if (notepad) notepad.Delete();
-                                    }
-                                    catch (System.Threading.ThreadAbortException) { }
-                                    catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
-                                }, $"[AmbientAICallouts] [AiCallout MVA] Animation maker Fiber");
+                                            if (Units[0].UnitOfficers[0])
+                                                if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
+                                                {
+                                                    Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                                    GameFiber.Sleep(31000);
+                                                }
+                                            if (notepad) notepad.Delete();
+                                        }
+                                        catch (System.Threading.ThreadAbortException) { }
+                                        catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
+                                    }, $"[AmbientAICallouts] [AiCallout MVA] Animation maker Fiber");
+                                }
+
+
+                                GameFiber.Sleep(15000);
+                                while (LSPDFR_Functions.IsCalloutRunning()) { GameFiber.Sleep(11000); }    //OLD:OfficerRequiringAssistance.finished or OfficerInPursuit.finished
                             }
-
-
-                            GameFiber.Sleep(15000);
-                            while (LSPDFR_Functions.IsCalloutRunning()) { GameFiber.Sleep(11000); }    //OLD:OfficerRequiringAssistance.finished or OfficerInPursuit.finished
-
                         }
                     }
                 }
@@ -769,9 +781,9 @@ namespace MVA
             Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Game.LocalPlayer.Character, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
             GameFiber.Sleep(1000);
             Units[0].UnitOfficers[0].PlayAmbientSpeech(null, "GENERIC_HI", 0, SpeechModifier.Force);
-            Game.DisplaySubtitle("~b~Officer~w~: Hey. Can you check the other one?", 6000);
+            Game.DisplaySubtitle("~b~Officer~w~: Hey. Can you check the other one?", 5000);
+            GameFiber.Sleep(3000);
             //Cop Faces his suspect
-            GameFiber.Sleep(6000);
             Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
             GameFiber.Sleep(600);
             Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop);
@@ -784,21 +796,25 @@ namespace MVA
             GameFiber.Sleep(1000);
             Game.DisplaySubtitle("~o~Suspect~w~: Hey", 4000);
             Suspects[1].PlayAmbientSpeech(null, "GENERIC_HI", 0, SpeechModifier.Force);
-            GameFiber.Sleep(5000);
+            GameFiber.Sleep(3000);
 
             LogTrivialDebug_withAiC(" DEBUG: choose what should happen");
             switch (new Random().Next(0, 3))
             {
                 case 0:
                     Suspect1Flees();
+                    //EndOfPursuit();
                     break;
                 case 1:
                     Suspect2Flees();
+                    //EndOfPursuit();
                     break;
                 case 2:
                     NothingHappens();
                     break;
             }
+
+
         }
 
         private void TaskJustGiveCover()
@@ -821,7 +837,7 @@ namespace MVA
             Units[0].UnitOfficers[0].PlayAmbientSpeech(null, "FOOT_CHASE", 0, SpeechModifier.Force);
             GameFiber.Sleep(12000);
             LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
-            AiCandHA_AddHelicopterToPursuit(pursuit);
+            Functions.AiCandHA_AddHelicopterToPursuit(MO, pursuit);
             GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
             //ISSUE: Officers & Peds get Dismissed before the Arrest is fullfilled.
         }
@@ -829,38 +845,69 @@ namespace MVA
         private void Suspect2Flees()
         {
             LogTrivialDebug_withAiC(" DEBUG: Suspect2Flees() entered");
+            if (isSTPRunning) ExternalPluginSupport.logInEvents(this);          //Stp Support
             LSPDFR_Functions.AddPedContraband(Suspects[1], LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
 
             int i = 0;
-            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && i <= 2 * 60/*sekunden*/   )
+            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedOverSTP && i < 2 * 60/*sekunden*/   )
             {
                 i++;
                 GameFiber.Sleep(500);
             }
 
-            if (LSPDFR_Functions.IsPedArrested(Suspects[1]))
+            if (LSPDFR_Functions.IsPedArrested(Suspects[1]) || suspectArrestedOverSTP)
             {
                 Game.DisplaySubtitle("~b~Officer~w~: Great. " + (Units[0].UnitOfficers.Count == 1 ? "I" : "We") + " finished here too. Thanks for the Backup", 6000);
             }
             else
             {
                 if (i >= 2 * 60) { Game.DisplaySubtitle("~b~Officer~w~: Would you PLEASE frisk your suspect! We can't stay here all day.", 6000); }
-
-                while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1])) { GameFiber.Sleep(500); }
+                while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedOverSTP)  { GameFiber.Sleep(500); }
                 LHandle pursuit = LSPDFR_Functions.CreatePursuit();
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[1]);
                 GameFiber.Sleep(1800);
                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                 if (Units[0].UnitOfficers.Count > 1) LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[1]);
-                AiCandHA_AddHelicopterToPursuit(pursuit);
+                Functions.AiCandHA_AddHelicopterToPursuit(MO, pursuit);
                 GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
             }
+            if (isSTPRunning) try { ExternalPluginSupport.logOutEvents(this); } catch { }          //Stp Support
         }
 
+        private void EndOfPursuit()
+        {
+            LogTrivialDebug_withAiC(" DEBUG: EndOfPursuit() entered");
+            GameFiber.Sleep(3000);
+            List<bool> anySuspectGrabbed = new List<bool> { false, false };
+            if (ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[0]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]))
+                anySuspectGrabbed[0] = true;
+            if (ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[1]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[1]))
+                anySuspectGrabbed[1] = true;
+
+            //----------------------------------------------------needs more code to detect which suspect is free for entering its own vehicle
+
+            //Peds Leave, Cops Aproach own vehicle
+            Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
+            Functions.AiCandHA_DismissHelicopter(MO);
+            foreach (var suspect in Suspects) if (suspect) { if (!IsPedOccupiedbyLSPDFRInteraction(suspect)) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); } else { suspect.IsPersistent = false; } }
+            for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
+            if (Units[0].UnitOfficers.Count != 1)
+            {
+                var officerAtCopCar = Units[0].UnitOfficers[0].Tasks.FollowNavigationMeshToPosition(Units[0].PoliceVehicle.GetOffsetPosition(new Vector3(2.7f, 0f, 0f)), heading + 0f, 0.75f);
+                Units[0].UnitOfficers[1].Tasks.FollowNavigationMeshToPosition(Units[0].PoliceVehicle.GetOffsetPosition(new Vector3(2.2f, 1.3f, 0f)), heading + 180f, 0.75f).WaitForCompletion();
+                while (officerAtCopCar.IsActive) { GameFiber.Sleep(300); }
+                Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                GameFiber.Sleep(16000);
+            }
+
+            finished = true;
+            EnterAndDismiss(Units[0]);
+        }
         private void NothingHappens()
         {
             LogTrivialDebug_withAiC(" DEBUG: NothingHappens() entered");
-            for (int i = 0; i < 46/*seconds*/; i++) if (!Game.IsPaused && !Rage.Native.NativeFunction.Natives.IS_PAUSE_MENU_ACTIVE<bool>()) { i++; GameFiber.Sleep(1000); }
+            int a = 0; while (a < 46/*seconds*/) if (!Game.IsPaused && !Rage.Native.NativeFunction.Natives.IS_PAUSE_MENU_ACTIVE<bool>()) { a++; GameFiber.Sleep(1000); }        //sleep wait for action until player is back in game
             Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Game.LocalPlayer.Character, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
             GameFiber.Sleep(1000);
             Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "GENERIC_THANKS", 0, SpeechModifier.Force); 
@@ -870,7 +917,7 @@ namespace MVA
 
             //Peds Leave, Cops Aproach own vehicle
             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
-            AiCandHA_DismissHelicopter();
+            Functions.AiCandHA_DismissHelicopter(MO);
             foreach (var suspect in Suspects) if (suspect) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); }
             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
             if (Units[0].UnitOfficers.Count != 1)
@@ -882,9 +929,7 @@ namespace MVA
                 Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
                 GameFiber.Sleep(16000);
             }
-            //if (cone0) cone0.Delete();
-            //if (cone1) cone1.Delete();      //is in another line for isPlayerResonponding in addition
-            //if (cone2) cone2.Delete();
+
             finished = true;
             EnterAndDismiss(Units[0]);
         }
@@ -918,6 +963,45 @@ namespace MVA
                 }
             }
             return false;
+        }
+
+
+        internal void Events_patDownPedEvent(Ped ped)
+        {
+            if (ped == Suspects[1])
+            {
+                suspectFirskedOverSTP = true;
+                StopThePed.API.Functions.injectPedSearchItems(Suspects[1]);
+            }
+        }
+
+        internal void Events_pedArrestedEvent(Ped ped)
+        {
+            if (ped == Suspects[1])
+            {
+                suspectArrestedOverSTP = true;
+            }
+        }
+    }
+
+    internal class ExternalPluginSupport
+    {
+        //STP
+        internal static bool isPedBeeingGrabbedBySTP(Ped ped)
+        {
+            if (StopThePed.API.Functions.isPedGrabbed(ped)) return true; else return false;
+        }
+
+        internal static void logInEvents(MVA mva)
+        {
+            StopThePed.API.Events.patDownPedEvent += mva.Events_patDownPedEvent;
+            StopThePed.API.Events.pedArrestedEvent += mva.Events_pedArrestedEvent;
+        }
+
+        internal static void logOutEvents(MVA mva)
+        {
+            StopThePed.API.Events.patDownPedEvent -= mva.Events_patDownPedEvent;
+            StopThePed.API.Events.pedArrestedEvent -= mva.Events_pedArrestedEvent;
         }
     }
 }

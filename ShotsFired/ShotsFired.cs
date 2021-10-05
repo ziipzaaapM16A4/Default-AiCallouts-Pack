@@ -47,15 +47,16 @@ namespace ShotsFired
                 int trys = 0;
                 while (!posFound)
                 {
-                    roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
-                    Vector3 irrelevant;
-                    float heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
+                    //roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                    //Vector3 irrelevant;
+                    //float heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
 
-                    NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
+                    //NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
 
-                    NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
-                    NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
+                    //NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
+                    //NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
+                    NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(roadside, true, out roadside, 16);
                     Location = roadside;
 
 
@@ -68,7 +69,7 @@ namespace ShotsFired
                 }
                 #endregion
 
-                SetupSuspects(1);  //need to stay 1. more would result that in a callout the rest would flee due to the way the - AAIC Backup requests-LSPFR Callouts work.
+                Functions.SetupSuspects(MO, 1);  //need to stay 1. more would result that in a callout the rest would flee due to the way the - AAIC Backup requests-LSPFR Callouts work.
 
                 #region Tasking Suspect
                 GameFiber.StartNew(delegate {
@@ -117,7 +118,7 @@ namespace ShotsFired
                 foreach (var unit in Units)
                 {
                     GameFiber.StartNew(delegate{
-                        var tmpUnit = unit.PoliceVehicle;
+                        var tmpUnit = unit;
                         try {
                             if (!IsUnitInTime(tmpUnit, arrivalDistanceThreshold + 40f, 130))  //if vehicle is never reaching its location
                             {
@@ -127,7 +128,7 @@ namespace ShotsFired
                                 anyUnitOnScene = true;
                             }
                         } catch { }
-                    });
+                    },"[AAIC] [Shotsfired] Fiber: Checking wether units even arrive");
                     GameFiber.Yield();
                 }
 
@@ -137,6 +138,8 @@ namespace ShotsFired
                 bool someoneSpottedSuspect = false;
                 bool playerSpottedSuspect = false;
                 bool suspectflees = false;
+                int suspectInvalidCounter = 0;
+                LSPD_First_Response.Mod.API.LHandle pursuit = LSPDFR_Functions.CreatePursuit();
                 RAGENativeUI.Elements.TimerBarPool timerBarPool = null;
                 RAGENativeUI.Elements.BarTimerBar progressbar = null;
 
@@ -155,13 +158,22 @@ namespace ShotsFired
 
                 while (suspectalive)
                 {
-                    LogVerboseDebug_withAiC("Doing new check on All entitys.");
-                    if (false)//!Functions.EntityValidityChecks(MO, false))
+                    if (!Suspects[0])//!Functions.EntityValidityChecks(MO, false))
                     {
-                        LogTrivial_withAiC("ERROR: in AiCallout object: At Process(): Some Entitys where invalid while having them on persistent. Aborting Callout");
-                        return false;
+                        if (suspectInvalidCounter % 30 == 0) LogTrivialDebug_withAiC("WARNING: Suspect is currently Invalid. Cannot process Script.");
+
+                        if (suspectInvalidCounter > 100)    //sleep ist 100 ms also mal 100 = 10 sekunden.
+                        {
+
+                            LogTrivial_withAiC("ERROR: in AiCallout object: At Process(): Suspect entity was too long invalid while having them on persistent. Aborting Callout");
+                            CleanUpEntitys();
+                            return false;
+                        }
+
+                        suspectInvalidCounter++;
                     } else
                     {
+                        suspectInvalidCounter = 0;
                         //-------------------------------------- Player -----------------------------------------------------
                         #region Officer Tasks
                         //If Player is near enough to the scene and other units spotted the suspect already => auto pursuit
@@ -221,31 +233,51 @@ namespace ShotsFired
                             suspectflees = true;
                             LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
                         }
+
                         //--------------------------------------- Unit Officers ------------------------------------------
                         foreach (PatrolUnit u in Units)
                         {
-                            foreach(var o in u.UnitOfficers)
+                            foreach(Ped o in u.UnitOfficers)
                             {
-                                //Able to spot the Suspect
-                                if (!someoneSpottedSuspect)
-                                    if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(o, Suspects[0])
-                                        && o.DistanceTo(Suspects[0]) < 50f)
+                                if (o) 
+                                {
+                                    //Able to spot the Suspect
+                                    if (!someoneSpottedSuspect)
+                                        if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(o, Suspects[0])
+                                            && o.DistanceTo(Suspects[0]) < 50f)
+                                        {
+                                            LogVerboseDebug_withAiC("Officer " + o + " has visual on suspect");
+                                            someoneSpottedSuspect = true;
+                                            if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit))
+                                                callInPursuit();
+                                        }
+
+                                    if (someoneSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
+
+                                    //Arrived at the Scene still moving
+                                    if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
+                                    && u.PoliceVehicle.Speed <= 4
+                                    && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
+                                    && !someoneSpottedSuspect)
                                     {
-                                        LogVerboseDebug_withAiC("Officer " + o + " has visual on suspect");
-                                        someoneSpottedSuspect = true;
-                                        if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit))
-                                            callInPursuit();
+                                        if (u.PoliceVehicle.Driver == o) u.PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
                                     }
 
-                                if (someoneSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
+                                    //Arrived at the Scene - Get out
+                                    if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
+                                    && u.PoliceVehicle.Speed == 0
+                                    && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
+                                    && !someoneSpottedSuspect)
+                                    {
+                                        o.Tasks.LeaveVehicle(LeaveVehicleFlags.LeaveDoorOpen);
+                                    }
 
-                                //Arrived at the Scene still moving
-                                if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
-                                && u.PoliceVehicle.Speed <= 4
-                                && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
-                                && !someoneSpottedSuspect)
-                                {
-                                    if (u.PoliceVehicle.Driver == o) u.PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
+                                    //Is near enough to the Suspect
+                                    if (o.IsAlive && o.DistanceTo(Suspects[0]) < 15f)
+                                    {
+                                        suspectflees = true;
+                                        LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
+                                    }
                                 }
 
                                 //Arrived at the Scene - Get out
@@ -368,6 +400,30 @@ namespace ShotsFired
             }
         }
 
+        private void CleanUpEntitys()
+        {
+            try
+            {
+                foreach(var sus in Suspects)
+                {
+                    if (sus) sus.Delete();
+                }
+                foreach (var unit in Units)
+                {
+                    foreach(var cop in unit.UnitOfficers)
+                    {
+                        if (cop) cop.Delete();
+                    }
+                }
+                foreach (var suscar in SuspectsVehicles)
+                {
+                    if (suscar) suscar.Delete();
+                }
+            } catch (Exception e)
+            {
+                LogTrivial_withAiC($"ERROR: in CleanUpEntitys: {e}");
+            }
+        }
 
         private bool ACTION_CRIME_REPORT_pressed()
         {
