@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.ComponentModel;
 using Rage;
@@ -139,7 +139,6 @@ namespace ShotsFired
                 bool playerSpottedSuspect = false;
                 bool suspectflees = false;
                 int suspectInvalidCounter = 0;
-                LSPD_First_Response.Mod.API.LHandle pursuit = LSPDFR_Functions.CreatePursuit();
                 RAGENativeUI.Elements.TimerBarPool timerBarPool = null;
                 RAGENativeUI.Elements.BarTimerBar progressbar = null;
 
@@ -154,8 +153,14 @@ namespace ShotsFired
                 attributes.AverageFightTime = 1;
                 if (new Random().Next(2) == 0) { Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
 
-
-
+                GameFiber.StartNew(delegate { try { 
+                        GameFiber.SleepUntil(() => acr_active, 120000); 
+                        while (acr_active) { 
+                            timerBarPool.Draw(); 
+                            GameFiber.Yield(); 
+                        }
+                } catch { } }, "[AAIC] - Shotsfired - RNUI Progressbar");
+                
                 while (suspectalive)
                 {
                     if (!Suspects[0])//!Functions.EntityValidityChecks(MO, false))
@@ -177,13 +182,6 @@ namespace ShotsFired
                         suspectInvalidCounter = 0;
                         //-------------------------------------- Player -----------------------------------------------------
                         #region Officer Tasks
-                        //If Player is near enough to the scene and other units spotted the suspect already => auto pursuit
-                        //if (someoneSpottedSuspect 
-                        //    && !playerSpottedSuspect
-                        //    && (Game.LocalPlayer.Character.DistanceTo(Suspects[0]) < 26f || Game.LocalPlayer.Character.DistanceTo(Location) <= arrivalDistanceThreshold)
-                        //    )
-                        //    LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true); //no autodetect
-
 
                         //Player Spottet Suspect
                         if (!someoneSpottedSuspect && !playerSpottedSuspect)
@@ -194,7 +192,8 @@ namespace ShotsFired
                                 playerInvolved = true;
                                 //someoneSpottedSuspect = true;
                                 playerSpottedSuspect = true;
-                                LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                                //LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                                //LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);          //Test
                                 acr_active = true;
                                 timerBarPool = new RAGENativeUI.Elements.TimerBarPool();
                                 progressbar = new RAGENativeUI.Elements.BarTimerBar("Reporting PC503");
@@ -211,18 +210,17 @@ namespace ShotsFired
                             }
                     
                         //Plyer found suspect but does not need visual because he is close enough
-                        if (acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 20f) //Crime Spottet & player is in area
+                        if (!someoneSpottedSuspect && playerSpottedSuspect
+                          && acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 20f) //Crime Spottet & player is in area
                         {
                             if (tickcounter % 100 == 0) Game.DisplayHelp($"If you encounter a crime or the suspect flees, \nreport it by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalKey()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
                             if (ACTION_CRIME_REPORT_pressed())
                             {
                                 progressbar.Percentage += 5f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%
-                                timerBarPool.Draw();
                             }
                             else if (progressbar.Percentage > 0f)
                             {
                                 progressbar.Percentage -= 10f; //1 sec = 10 ticks. 100 / 10 = 10; Proof: 10f * 10 ticks(oder 1 sek) = 100%
-                                timerBarPool.Draw();
                             }
                             
                             
@@ -294,22 +292,22 @@ namespace ShotsFired
                                         suspectflees = true;
                                         LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
                                     }
-                                }
 
-                                //Arrived at the Scene - Get out
-                                if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
-                                && u.PoliceVehicle.Speed <= 0.2
-                                && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
-                                && !someoneSpottedSuspect)
-                                {
-                                    o.Tasks.LeaveVehicle(LeaveVehicleFlags.LeaveDoorOpen);
-                                }
+                                    //Arrived at the Scene - Get out
+                                    if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
+                                    && u.PoliceVehicle.Speed <= 0.2
+                                    && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
+                                    && !someoneSpottedSuspect)
+                                    {
+                                        o.Tasks.LeaveVehicle(LeaveVehicleFlags.LeaveDoorOpen);
+                                    }
 
-                                //Is near enough to the Suspect
-                                if (o.IsAlive && o.DistanceTo(Suspects[0]) < 15f)
-                                {
-                                    suspectflees = true;
-                                    LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
+                                    //Is near enough to the Suspect
+                                    if (o.IsAlive && o.DistanceTo(Suspects[0]) < 15f)
+                                    {
+                                        suspectflees = true;
+                                        LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
+                                    }
                                 }
                             }
 
