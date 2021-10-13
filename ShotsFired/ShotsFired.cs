@@ -30,26 +30,17 @@ namespace ShotsFired
                 #endregion
 
                 #region Spawnpoint searching
-                Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                Vector3 proposedPosition = Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 15f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 15f);
                 bool posFound = false;
                 int trys = 0;
-                while (!posFound)
+                while (!posFound && trys < 30)
                 {
-                    //roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
-                    //Vector3 irrelevant;
-                    //float heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
-
-                    //NativeFunction.Natives.x240A18690AE96513<bool>(roadside.X, roadside.Y, roadside.Z, out roadside, 0, 3.0f, 0f);//GET_CLOSEST_VEHICLE_NODE
-
-                    //NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
-                    //NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
-
-                    NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(roadside, true, out roadside, 16);
-                    Location = roadside;
+                    proposedPosition = Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 15f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 15f);
+                    Rage.Native.NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(proposedPosition, true, out proposedPosition, 16);  //Finding a Place on the pavement
+                    Location = proposedPosition;
 
 
-                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    if (Functions.IsLocationAcceptedBySystem(Location))
                         posFound = true;
 
                     trys++;

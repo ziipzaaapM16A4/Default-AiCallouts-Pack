@@ -20,20 +20,26 @@ namespace Fighting
             try
             {
                 SceneInfo = "Fighting";
-                bool posFound = false;
-                int trys = 0;
-                Vector3 tmp = new Vector3();
-                while (!posFound && trys < 20)
-                {
-                    Rage.Native.NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>( Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f), true, out tmp, 16);
-                    Location = tmp;
-                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
-                        posFound = true;
-                    trys++;
-                }
                 arrivalDistanceThreshold = 14f;
                 CalloutDetailsString = "CRIME_ASSAULT";
+
+                Vector3 proposedPosition = Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 15f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 15f);
+                bool posFound = false;
+                int trys = 0;
+                while (!posFound && trys < 30)
+                {
+                    proposedPosition = Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 15f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 15f);
+                    Rage.Native.NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(proposedPosition, true, out proposedPosition, 16);  //Finding a Place on the pavement
+                    Location = proposedPosition;
+
+
+                    if (Functions.IsLocationAcceptedBySystem(Location))
+                        posFound = true;
+
+                    trys++;
+                    if (trys >= 30) return false;
+                }
+
                 Functions.SetupSuspects(MO, 2);
 
                 Suspects[0].Tasks.FightAgainst(Suspects[1]);
