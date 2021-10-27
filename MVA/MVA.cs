@@ -71,6 +71,7 @@ namespace MVA
                 Suspects[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, heading + 180f, 1f, 2f, 9000);
                 Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[1].RightPosition, heading + 0f, 1f, 2f, 9000);
                 GameFiber.Sleep(2000);
+                Suspects[1].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
 
                 senarioTaskAsigned = false;
                 //Suspect Animiation Fiber
@@ -212,6 +213,7 @@ namespace MVA
                                 GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
 
                                 Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
                                 GameFiber.Sleep(2500);
                                 if (Units[0].UnitOfficers.Count != 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
                                 GameFiber.Sleep(200);
@@ -284,6 +286,7 @@ namespace MVA
                                     GameFiber.SleepUntil(() => watchClock.CurrentTimeRatio > 0.92f, 10000);
 
                                     Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);
+                                    Suspects[1].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
                                     GameFiber.Sleep(2500);
                                     if (Units[0].UnitOfficers.Count != 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
                                     GameFiber.Sleep(200);
@@ -773,7 +776,9 @@ namespace MVA
             foreach (var officer in Units[0].UnitOfficers) officer.Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop);
 
             //When player is just right before arriving cops position
-            GameFiber.SleepUntil(() => Game.LocalPlayer.Character.DistanceTo(Units[0].UnitOfficers[0].Position) < 7f && Game.LocalPlayer.Character.IsOnFoot, 0);
+            GameFiber.SleepUntil(() => Game.LocalPlayer.Character.DistanceTo(Units[0].UnitOfficers[0].Position) < 9f && Game.LocalPlayer.Character.IsOnFoot, 0);
+            Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
+            GameFiber.Sleep(2600);
             if (Units[0].UnitOfficers.Count > 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
 
             //When player arrives Cop turns to player
@@ -787,6 +792,8 @@ namespace MVA
             Rage.Native.NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Suspects[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
             GameFiber.Sleep(600);
             Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop);
+            Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
+            GameFiber.Sleep(2600);
             if (Units[0].UnitOfficers.Count != 1) Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "SETTLE_DOWN", 0, SpeechModifier.Force);
 
             //When player reaches the suspect

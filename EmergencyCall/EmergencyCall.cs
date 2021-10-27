@@ -86,6 +86,7 @@ namespace EmergencyCall
                     GameFiber.Sleep(1000);
 
                     var callerAnimation = caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
+                    caller.PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
                     for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
                     var notebookAnimationFinished = false;
                     GameFiber.StartNew(delegate
