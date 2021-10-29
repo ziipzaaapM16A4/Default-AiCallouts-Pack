@@ -317,7 +317,7 @@ namespace OutstandingWarrant
                                 //Units[0].UnitOfficers[RadioOfficerIndex].Tasks.PlayAnimation()
 
                                 GameFiber.Sleep(5000);
-                                if (!LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) ) { Suspects[0].Delete(); }
+                                if (!LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) ) { Suspects[0].IsPersistent = false; }
                                 GameFiber.Sleep(5000);
                                 EnterAndDismiss(Units[0]);
                             }

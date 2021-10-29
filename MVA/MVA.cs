@@ -474,7 +474,7 @@ namespace MVA
                         foreach (var suspect in suspectsRecoveryVar) { 
                             if (suspect) 
                                 if (suspect.Position.DistanceTo(locationRecoveryVar) < 9f) 
-                                    try { suspect.Delete(); 
+                                    try { suspect.IsPersistent = false; 
                                     } catch { } 
                         } 
                     }
@@ -482,17 +482,10 @@ namespace MVA
                         foreach (var vehicle in suspectsVehicleRecoveryVar) { 
                             if (vehicle) 
                                 if (vehicle.Position.DistanceTo(locationRecoveryVar) < 9f || vehicle.IsEmpty) 
-                                    try { vehicle.Delete(); 
+                                    try { vehicle.IsPersistent = false; ; 
                                     } catch { } 
                         } 
                     }
-                    if (Units[0].PoliceVehicle) 
-                        if (Units[0].PoliceVehicle.DistanceTo(Location) < 9f) { 
-                            Units[0].PoliceVehicle.Delete(); 
-                            foreach (var officer in Units[0].UnitOfficers) { 
-                                if (officer) officer.Delete();
-                            } 
-                        }
                 });
                 return true;
             }

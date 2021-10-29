@@ -137,12 +137,14 @@ namespace EmergencyCall
                 }
                 return true;
             }
-            catch (System.Threading.ThreadAbortException) { return false; }
+            catch (System.Threading.ThreadAbortException) { if (caller) caller.Delete(); return false; }
             catch (Exception e)
             {
+                if (caller) caller.Delete();
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
                 return false;
             }
+            finally { if (caller) caller.IsPersistent = false;}
         }
 
         private void OfficersAproach()
@@ -171,6 +173,7 @@ namespace EmergencyCall
         {
             try
             {
+                if (caller) caller.IsPersistent = false;
                 EnterAndDismiss(Units[0]);
                 return true;
             }

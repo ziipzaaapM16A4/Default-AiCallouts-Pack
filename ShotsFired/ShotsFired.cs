@@ -345,7 +345,7 @@ namespace ShotsFired
             try
             {
                 while (Game.LocalPlayer.Character.DistanceTo(Location) < 50f) GameFiber.Sleep(500);
-                if (Suspects[0]) Suspects[0].Delete();
+                if (Suspects[0]) Suspects[0].IsPersistent = false;
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
