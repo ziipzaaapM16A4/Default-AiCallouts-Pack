@@ -120,9 +120,19 @@ namespace ShotsFired
                     GameFiber.StartNew(delegate{
                         var tmpUnit = unit;
                         try {
-                            if (!IsUnitInTime(tmpUnit, arrivalDistanceThreshold + 40f, 130))  //if vehicle is never reaching its location
-                            {
-                                Disregard();
+                            if (!IsUnitInTime(tmpUnit, arrivalDistanceThreshold + 40f, randomizer.Next(125,140)))  //if vehicle is never reaching its location
+                            { 
+                                if (Suspects[0])
+                                    if (Suspects[0].IsAlive) {
+
+                                        if (tmpUnit.PoliceVehicle) { 
+                                            Game.DisplayNotification($"~b~{tmpUnit.RadioVoice.CallSignString}~w~: {(tmpUnit.UnitOfficers.Count <= 1 ? "I'm stuck in traffic. \nShow me canceling." : "We are out. We're stuck in traffic.")}");
+                                        }
+
+                                        foreach(var unitOfc in tmpUnit.UnitOfficers) { if (unitOfc) unitOfc.Delete(); }
+                                        tmpUnit.PoliceVehicle.Delete();
+                                        Units.Remove(tmpUnit);
+                                    }
                             } else
                             {
                                 anyUnitOnScene = true;
