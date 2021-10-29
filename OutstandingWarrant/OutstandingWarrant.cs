@@ -112,6 +112,7 @@ namespace OutstandingWarrant
                         //LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
                         
                         Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("mp_cop_tutdealer_leaning@exit_aggressive"), "aggressive_exit", 1f, AnimationFlags.None);
+                        Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
                     } 
                     else
                     {
@@ -269,8 +270,9 @@ namespace OutstandingWarrant
 
 
                         if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "COP_ARRIVAL_ANNOUNCE", 0, SpeechModifier.Force); }
-                        GameFiber.Sleep(12000);
-
+                        GameFiber.Sleep(6000);
+                        Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
+                        GameFiber.Sleep(6000);
                         senarioTaskAsigned = true;
                         Suspects[0].Tasks.Clear();
                         //shooter.Tasks.PlayAnimation(new AnimationDictionary(""), "", 1f, AnimationFlags.None);
@@ -293,7 +295,9 @@ namespace OutstandingWarrant
                             GameFiber.Sleep(900);
                             if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
                             Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
-                            GameFiber.Sleep(900);
+                            GameFiber.Sleep(300);
+                            Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
+                            GameFiber.Sleep(300);
                             if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].PlayAmbientSpeech("A_M_M_GENERICMALE_01_WHITE_MINI_02", "DROP_THE_WEAPON", 0, SpeechModifier.Force); GameFiber.Sleep(1000); }
                             Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                             GameFiber.Sleep(900);
@@ -301,6 +305,8 @@ namespace OutstandingWarrant
                             Units[0].UnitOfficers[0].PlayAmbientSpeech(new AnimationDictionary("A_M_M_GENERICMALE_01_WHITE_MINI_01"), "DROP_THE_WEAPON", 0, SpeechModifier.Force);
                             GameFiber.Sleep(2000);
 
+                            Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
+                            GameFiber.Sleep(500);
                             Suspects[0].Tasks.FireWeaponAt(Units[0].UnitOfficers[0], 20000, FiringPattern.BurstFirePistol);
                             Suspects[0].RelationshipGroup = new RelationshipGroup("PRISONER");
                             Suspects[0].RelationshipGroup.SetRelationshipWith("COP", Relationship.Hate);
