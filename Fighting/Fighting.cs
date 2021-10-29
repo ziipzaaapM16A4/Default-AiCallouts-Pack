@@ -84,6 +84,10 @@ namespace Fighting
                     Units[0].PoliceVehicle.IsSirenSilent = true;
                     Units[0].PoliceVehicle.TopSpeed = 12f;
                     OfficerReportOnScene(Units[0]);
+                    GameFiber.Sleep(1000);
+                    Suspects[0].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
+                    GameFiber.Sleep(1000);
+                    Suspects[1].PlayAmbientSpeech(null, "PED_RANT", 0, SpeechModifier.Force);
 
                     GameFiber.SleepUntil(() => Location.DistanceTo(Units[0].PoliceVehicle.Position) < arrivalDistanceThreshold + 5f /* && Units[0].PoliceVehicle.Speed <= 1*/, 30000);
                     Units[0].PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
