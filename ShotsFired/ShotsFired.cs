@@ -17,9 +17,12 @@ namespace ShotsFired
     {
         public override int UnitsNeeded => 3;
 
-        bool playerInvolved = false;
         Random randomizer = new Random();
         LSPD_First_Response.Mod.API.LHandle pursuit;
+        RAGENativeUI.Elements.TimerBarPool timerBarPool = new RAGENativeUI.Elements.TimerBarPool();
+        RAGENativeUI.Elements.BarTimerBar progressbar = new RAGENativeUI.Elements.BarTimerBar("Reporting PC503");
+        
+        bool calledInByCrimeReport = false;
 
         Keys ACTION_CRIME_REPORT_key;
         Keys ACTION_CRIME_REPORT_modifier_key;
@@ -145,12 +148,12 @@ namespace ShotsFired
                 GameFiber.WaitWhile(() => !anyUnitOnScene && Game.LocalPlayer.Character.Position.DistanceTo(Location) >= arrivalDistanceThreshold + 40f, 25000);
 
                 bool suspectalive = true;
-                bool someoneSpottedSuspect = false;
+                bool aiSpottedSuspect = false;
                 bool playerSpottedSuspect = false;
                 bool suspectflees = false;
                 int suspectInvalidCounter = 0;
-                RAGENativeUI.Elements.TimerBarPool timerBarPool = null;
-                RAGENativeUI.Elements.BarTimerBar progressbar = null;
+               
+                progressbar.ForegroundColor = System.Drawing.Color.Red;
 
                 int tickcounter = 0;    //to count sleep processes to reach a specifc time.
                 bool acr_active = false;
@@ -159,16 +162,23 @@ namespace ShotsFired
                 LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[0]);
                 LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
+                LSPD_First_Response.Mod.API.Functions disablecrimereportTempVar = new LSPD_First_Response.Mod.API.Functions();  //Awaiting change through LMS!
+                disablecrimereportTempVar.SetPedDisableCrimeEvents(Suspects[0], true);                                          //Awaiting change through LMS!
                 var attributes = LSPDFR_Functions.GetPedPursuitAttributes(Suspects[0]);
                 attributes.AverageFightTime = 1;
                 if (new Random().Next(2) == 0) { Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
 
                 GameFiber.StartNew(delegate { try { 
-                        GameFiber.SleepUntil(() => acr_active, 120000); 
-                        while (acr_active) { 
-                            timerBarPool.Draw(); 
-                            GameFiber.Yield(); 
+                        GameFiber.SleepUntil(() => acr_active, 120000);
+                        while (suspectalive && Suspects[0] && !aiSpottedSuspect) {                      //when recreating a suspect this would lead to kill the RNUI progressbar fiber
+                            while (acr_active && !aiSpottedSuspect && progressbar.Percentage > 0f)
+                            {
+                                timerBarPool.Draw();
+                                GameFiber.Yield();
+                            }
+                            GameFiber.Yield();
                         }
+
                 } catch { } }, "[AAIC] - Shotsfired - RNUI Progressbar");
                 
                 while (suspectalive)
@@ -179,7 +189,7 @@ namespace ShotsFired
 
                         if (suspectInvalidCounter > 100)    //sleep ist 100 ms also mal 100 = 10 sekunden.
                         {
-
+                            //ToDo: Recreate the Suspect to keep the callout going.
                             LogTrivial_withAiC("ERROR: in AiCallout object: At Process(): Suspect entity was too long invalid while having them on persistent. Aborting Callout");
                             CleanUpEntitys();
                             return false;
@@ -193,67 +203,61 @@ namespace ShotsFired
                         //-------------------------------------- Player -----------------------------------------------------
                         #region Officer Tasks
 
-                        //Player Spottet Suspect
-                        if (!someoneSpottedSuspect && !playerSpottedSuspect)
-                            if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 25f + (playerRespondingInAdditon ? 15f : 0f))
+                        //Player Spottet Suspect - first time
+                        if (!aiSpottedSuspect && !playerSpottedSuspect) {
+                            if (CloseEnoughForReportAt(Suspects[0]))
                             {
                                 LogVerboseDebug_withAiC("player has visual on suspect");
-                                playerInvolved = true;
-                                //someoneSpottedSuspect = true;
                                 playerSpottedSuspect = true;
                                 //LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                                 //LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);          //Test
                                 acr_active = true;
-                                timerBarPool = new RAGENativeUI.Elements.TimerBarPool();
-                                progressbar = new RAGENativeUI.Elements.BarTimerBar("Reporting PC503");
-                                progressbar.ForegroundColor = System.Drawing.Color.Red;
                                 timerBarPool.Add(progressbar);
                             }
-
+                        }
                         //Player lost Suspect while unreported
-                        else if (!someoneSpottedSuspect && playerSpottedSuspect)
-                            if (!NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
-                                || Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) > 25f + (playerRespondingInAdditon ? 15f : 0f))
-                            {
-                                    acr_active = false;
-                            }
-                    
-                        //Plyer found suspect but does not need visual because he is close enough
-                        if (!someoneSpottedSuspect && playerSpottedSuspect
-                          && acr_active && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 20f) //Crime Spottet & player is in area
+                        else if (!aiSpottedSuspect && playerSpottedSuspect && acr_active) { 
+                            if (!CloseEnoughForReportAt(Suspects[0])) { acr_active = false; }
+                        }
+                        //Player Spottet Suspect - again
+                        else if (!aiSpottedSuspect && playerSpottedSuspect && !acr_active) { 
+                            if (CloseEnoughForReportAt(Suspects[0])) { acr_active = true; }
+                        }
+
+                        //Plyer reporting or able to report
+                        if (!aiSpottedSuspect && playerSpottedSuspect && acr_active)
                         {
-                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you encounter a crime or the suspect flees, \nreport it by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalKey()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
+                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you see the suspect, \nreport its position by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalKey()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
                             if (ACTION_CRIME_REPORT_pressed())
                             {
-                                progressbar.Percentage += 5f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%
+                                progressbar.Percentage += 0.05f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%
                             }
                             else if (progressbar.Percentage > 0f)
                             {
-                                progressbar.Percentage -= 10f; //1 sec = 10 ticks. 100 / 10 = 10; Proof: 10f * 10 ticks(oder 1 sek) = 100%
+                                progressbar.Percentage -= 0.10f; //1 sec = 10 ticks. 100 / 10 = 10; Proof: 10f * 10 ticks(oder 1 sek) = 100%
                             }
                             
                             
-                            if (progressbar.Percentage >= 100f) { acr_active = false; timerBarPool.Remove(progressbar); callInPursuit(); }
+                            if (progressbar.Percentage >= 1f) { acr_active = false; aiSpottedSuspect = true; timerBarPool.Remove(progressbar); calledInByCrimeReport = true;  callInPursuit(); }
                         }
 
-                        //Wenn Player nach der Ai den Suspect sieht.
-                        if (someoneSpottedSuspect && !playerSpottedSuspect)
+                        //Wenn der Player NACH den AiUnits den Suspect sieht.
+                        if (aiSpottedSuspect && !playerSpottedSuspect)
                         {
                             if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
                                 && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 40f + (playerRespondingInAdditon ? 30f : 0f))
                             {
                                 LogVerboseDebug_withAiC("player has now visual on suspect too");
-                                playerInvolved = true;
                                 playerSpottedSuspect = true;
                                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
+                                //possibly placing pursuit in progress msg
                             }
                         }
 
-                        //Is near enough to the Suspect
+                        //Is near enough to the Suspect to trigger running mode
                         if (Game.LocalPlayer.Character.DistanceTo(Suspects[0]) < 15f && Game.LocalPlayer.Character.IsAlive)
                         {
-                            LogVerboseDebug_withAiC("player is near enough to suspect");
+                            LogVerboseDebug_withAiC("suspect starts running");
                             suspectflees = true;
                             LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
                         }
@@ -266,23 +270,23 @@ namespace ShotsFired
                                 if (o) 
                                 {
                                     //Able to spot the Suspect
-                                    if (!someoneSpottedSuspect)
+                                    if (!aiSpottedSuspect)
                                         if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(o, Suspects[0])
                                             && o.DistanceTo(Suspects[0]) < 50f)
                                         {
                                             LogVerboseDebug_withAiC("Officer " + o + " has visual on suspect");
-                                            someoneSpottedSuspect = true;
+                                            aiSpottedSuspect = true;
                                             if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit))
                                                 callInPursuit();
                                         }
 
-                                    if (someoneSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
+                                    if (aiSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
 
                                     //Arrived at the Scene still moving
                                     if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
                                     && u.PoliceVehicle.Speed <= 4
                                     && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
-                                    && !someoneSpottedSuspect)
+                                    && !aiSpottedSuspect)
                                     {
                                         if (u.PoliceVehicle.Driver == o) u.PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
                                     }
@@ -291,7 +295,7 @@ namespace ShotsFired
                                     if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
                                     && u.PoliceVehicle.Speed == 0
                                     && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
-                                    && !someoneSpottedSuspect)
+                                    && !aiSpottedSuspect)
                                     {
                                         o.Tasks.LeaveVehicle(LeaveVehicleFlags.LeaveDoorOpen);
                                     }
@@ -307,7 +311,7 @@ namespace ShotsFired
                                     if (o.IsAlive && o.IsInVehicle(u.PoliceVehicle, false)
                                     && u.PoliceVehicle.Speed <= 0.2
                                     && u.PoliceVehicle.DistanceTo(Location) < arrivalDistanceThreshold + 40f
-                                    && !someoneSpottedSuspect)
+                                    && !aiSpottedSuspect)
                                     {
                                         o.Tasks.LeaveVehicle(LeaveVehicleFlags.LeaveDoorOpen);
                                     }
@@ -327,7 +331,8 @@ namespace ShotsFired
 
 
                         #region Suspect Tasks
-                        if (!Suspects[0].IsAlive) suspectalive = false;
+                        if (!Suspects[0].IsAlive) 
+                            suspectalive = false;
                         
                         if (suspectalive && !suspectflees) {
                             //NativeFunction.Natives.TASK_COMBAT_HATED_TARGETS_IN_AREA(Suspects[0], Location, arrivalDistanceThreshold + 40f, null);
@@ -341,7 +346,7 @@ namespace ShotsFired
                 }
 
                 //------------------------------------------------------------------------------ Wenn niemand mehr schießt
-                if (false) ;
+                //if (false) ;
 
 
                 //leave when dead for now
@@ -378,13 +383,29 @@ namespace ShotsFired
             }
         }
 
-        private void callInPursuit()
+        private bool CloseEnoughForReportAt(Ped ped)
         {
-            //ToDo: simulate an new fresh started pursuit that is called in.
-            LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);
-            if (playerRespondingInAdditon)
-                Game.DisplayNotification("", "CHAR_CALL911", "pursuit initiated", "asfdas", "sadföklj"); //ToDo: ersetzte felder.
-            LSPDFR_Functions.PlayScannerAudioUsingPosition("ATTENTION_ALL_UNITS WE_HAVE A CRIME_SUSPECT_RESISTING_ARREST IN_OR_ON_POSITION", Location); //ToDo: Teste parameter der dispatch ruf function
+            return
+                    //has visual in a certain distance - kann ihn über eine bestimmte distance sehen
+                    NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])                        
+                    && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 25f + (playerRespondingInAdditon ? 8f : 0f) + (Game.LocalPlayer.Character.IsInAnyVehicle(false) ? 8f : 0f)
+                    
+                    ||
+
+                    //is without visual close enough to the suspect - ist ohne ihn zu sehen nah genug
+                    Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 10f + (playerRespondingInAdditon ? 8f : 0f) + (Game.LocalPlayer.Character.IsInAnyVehicle(false) ? 8f : 0f);             
+                                                    
+        }
+
+        private void callInPursuit()
+        {            
+            if (playerRespondingInAdditon || calledInByCrimeReport)
+            {
+                LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);                   //ATTENTION: Keep this order to prevent losing the Pursuit Radar.
+                LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);            //ATTENTION: Keep this order to prevent losing the Pursuit Radar.
+                //Game.DisplayNotification(null, "CHAR_CALL911", "Dispatch", "pursuit initiated", $"Pursuit initiated at: {World.TimeOfDay}."); //ToDo: ersetzte felder.
+                LSPDFR_Functions.PlayScannerAudioUsingPosition("ATTENTION_ALL_UNITS WE_HAVE A CRIME_SUSPECT_RESISTING_ARREST IN_OR_ON_POSITION", Location); //ToDo: Teste parameter der dispatch ruf function
+            }
 
         }
 
@@ -412,7 +433,7 @@ namespace ShotsFired
             //Example idea: Cops getting back into their vehicle. drive away dismiss the rest. after 90 secconds delete if possible entitys that have not moved away.
             try
             {
-                //ToDo: Cleanup RUNI elements
+                timerBarPool.Remove(progressbar);
                 while (Game.LocalPlayer.Character.DistanceTo(Location) < 50f) GameFiber.Sleep(500);
                 if (Suspects[0]) Suspects[0].Delete();
                 return true;
@@ -475,10 +496,10 @@ namespace ShotsFired
                 List<Keys> keyList = new List<Keys>();
 
                 LogTrivialDebug_withAiC("[initialization] DEBUG: Attempt to read settings");   
-                try { ACTION_CRIME_REPORT_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("AmbientResponse", "RespondToAiCAsSecondary_Key", "X")); successfullySetup[0] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_key"); }
-                try { ACTION_CRIME_REPORT_modifier_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("AmbientResponse", "RespondToAiCAsSecondary_ModifierKey", "LControlKey")); successfullySetup[1] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_key"); }
-                try { ACTION_CRIME_REPORT_button = LSPDFR_keys.ReadEnum<ControllerButtons>("AmbientResponse", "RespondToAiCAsSecondary_Button", ControllerButtons.None); successfullySetup[2] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_button"); }
-                try { ACTION_CRIME_REPORT_modifier_button = LSPDFR_keys.ReadEnum<ControllerButtons>("AmbientResponse", "RespondToAiCAsSecondary_ModifierButton", ControllerButtons.None); successfullySetup[3] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_button"); }
+                try { ACTION_CRIME_REPORT_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("", "CRIME_REPORT_Key", "B")); successfullySetup[0] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_key"); }
+                try { ACTION_CRIME_REPORT_modifier_key = (Keys)kc.ConvertFromString(LSPDFR_keys.ReadString("", "CRIME_REPORT_ModifierKey", "None")); successfullySetup[1] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_key"); }
+                try { ACTION_CRIME_REPORT_button = LSPDFR_keys.ReadEnum<ControllerButtons>("", "CRIME_REPORT_ControllerKey", ControllerButtons.RightThumb); successfullySetup[2] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_button"); }
+                try { ACTION_CRIME_REPORT_modifier_button = LSPDFR_keys.ReadEnum<ControllerButtons>("", "CRIME_REPORT_ControllerModifierKey", ControllerButtons.None); successfullySetup[3] = true; } catch { Game.LogTrivial($"[AmbientAICallouts] [initialization] WARNING: Couldn't read ACTION_CRIME_REPORT_modifier_button"); }
 
 
                 bool allOK = true;
@@ -505,23 +526,23 @@ namespace ShotsFired
 
                 ACTION_CRIME_REPORT_key = Keys.B;
                 ACTION_CRIME_REPORT_modifier_key = Keys.None;
-                ACTION_CRIME_REPORT_button = ControllerButtons.DPadDown; //ToDo: verifiy the standard button.
+                ACTION_CRIME_REPORT_button = ControllerButtons.RightThumb;
                 ACTION_CRIME_REPORT_modifier_button = ControllerButtons.None;
 
             }
 
             if (!settingsOK)
             {
-                if (successfullySetup[0] == false) ACTION_CRIME_REPORT_key = Keys.X;
-                if (successfullySetup[1] == false) ACTION_CRIME_REPORT_modifier_key = Keys.LControlKey;
-                if (successfullySetup[2] == false) ACTION_CRIME_REPORT_button = ControllerButtons.None;
+                if (successfullySetup[0] == false) ACTION_CRIME_REPORT_key = Keys.B;
+                if (successfullySetup[1] == false) ACTION_CRIME_REPORT_modifier_key = Keys.None;
+                if (successfullySetup[2] == false) ACTION_CRIME_REPORT_button = ControllerButtons.RightThumb;
                 if (successfullySetup[3] == false) ACTION_CRIME_REPORT_modifier_button = ControllerButtons.None;
             }
 
-            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout key = " + ACTION_CRIME_REPORT_key);
-            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout modifier key = " + ACTION_CRIME_REPORT_modifier_key);
-            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout button = " + ACTION_CRIME_REPORT_button);
-            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Accept AiCallout modifier button = " + ACTION_CRIME_REPORT_modifier_button);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Crime Report key = " + ACTION_CRIME_REPORT_key);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Crime Report modifier key = " + ACTION_CRIME_REPORT_modifier_key);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Crime Report button = " + ACTION_CRIME_REPORT_button);
+            LogTrivialDebug_withAiC("[initialization] DEBUG: Setting: Crime Report modifier button = " + ACTION_CRIME_REPORT_modifier_button);
         }
     }
 }
