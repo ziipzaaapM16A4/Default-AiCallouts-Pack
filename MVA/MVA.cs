@@ -220,7 +220,7 @@ namespace MVA
                                 //task ped to go to his car
                                 if (seperateThem) {
                                     GameFiber.Sleep(400);
-                                    Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
+                                    Suspects[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].RightPosition, SuspectsVehicles[0].Heading - 90f, 1f, 2f, 9000);
                                 }
 
                                 var looksAround = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@idle_a"), "idle_c", 2f, AnimationFlags.None);
@@ -245,7 +245,7 @@ namespace MVA
                                 {
                                     int count = 0;
 
-                                    if (Suspects[0]) Suspects[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[1].RightPosition, SuspectsVehicles[1].Heading - 90f, 1f, 2f, 9000);
+                                    if (Suspects[1]) Suspects[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[1].RightPosition, SuspectsVehicles[1].Heading - 90f, 1f, 2f, 9000);
                                     GameFiber.Sleep(600);
 
                                     while (
@@ -470,11 +470,11 @@ namespace MVA
                 GameFiber.StartNew(delegate
                 {
                     GameFiber.Sleep(61000);
-                    LogTrivial_withAiC("INFO: starting now the check for Entitys which has not been cleaned up. Deleting if not");
+                    LogTrivial_withAiC("INFO: starting now the check for Entitys which has not been cleaned up. stopping persistance if not");
                     if (suspectsRecoveryVar.Any()) { 
                         foreach (var suspect in suspectsRecoveryVar) { 
                             if (suspect) 
-                                if (suspect.Position.DistanceTo(locationRecoveryVar) < 9f) 
+                                //if (suspect.Position.DistanceTo(locationRecoveryVar) < 9f) 
                                     try { suspect.IsPersistent = false; 
                                     } catch { } 
                         } 
@@ -482,7 +482,7 @@ namespace MVA
                     if (suspectsVehicleRecoveryVar.Any()) { 
                         foreach (var vehicle in suspectsVehicleRecoveryVar) { 
                             if (vehicle) 
-                                if (vehicle.Position.DistanceTo(locationRecoveryVar) < 9f || vehicle.IsEmpty) 
+                                //if (vehicle.Position.DistanceTo(locationRecoveryVar) < 9f || vehicle.IsEmpty) 
                                     try { vehicle.IsPersistent = false; ; 
                                     } catch { } 
                         } 
