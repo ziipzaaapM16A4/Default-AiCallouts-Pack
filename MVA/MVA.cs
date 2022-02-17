@@ -31,10 +31,10 @@ namespace MVA
                 SceneInfo = "Motor Vehicle Accident";
                 CalloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
                 if (IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
-                Vector3 roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
+                Vector3 roadside = new Vector3();
                 bool posFound = false;
                 int trys = 0;
-                while (!posFound && trys < 30)
+                while (!posFound)
                 {
                     roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
 
@@ -51,10 +51,11 @@ namespace MVA
                     if (Rage.Native.NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside)) Location = roadside; //_GET_ROAD_SIDE_POINT_WITH_HEADING
 
 
-                    if (Location.DistanceTo(Game.LocalPlayer.Character.Position) > AmbientAICallouts.API.Functions.minimumAiCalloutDistance
-                     && Location.DistanceTo(Game.LocalPlayer.Character.Position) < AmbientAICallouts.API.Functions.maximumAiCalloutDistance)
+                    if (Functions.IsLocationAcceptedBySystem(Location))
                         posFound = true;
                     trys++;
+                    if (trys >= 30) { LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): unable to find safe coords for this event"); return false; }
+
                 }
 
                 //spawn 2 vehicles at the side of the road
