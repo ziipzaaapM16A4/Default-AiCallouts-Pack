@@ -90,13 +90,11 @@ namespace Fighting
 
                     startLoosingHealth = true;
 
-                    LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
-                    foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true); }
-
                     if (IsAiTakingCare())
                     {
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
                         LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
+                        foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true); }
                         var taskGoWhileAiming0 = Units[0].UnitOfficers[0].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot);
                         if (Units[0].UnitOfficers.Count > 1 && Suspects[1]) { Units[0].UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[1], Suspects[1], 5f, 1f, false, FiringPattern.SingleShot); }
                         else if (Units[0].UnitOfficers.Count > 1) { Units[0].UnitOfficers[1].Tasks.GoToWhileAiming(Suspects[0], Suspects[0], 5f, 1f, false, FiringPattern.SingleShot); }
@@ -220,13 +218,15 @@ namespace Fighting
                         LogTrivialDebug_withAiC($"DEBUG: Aim and aproach and Hands up");
                         //unitOfficers[0].Tasks.GoToWhileAiming(location, suspects[0], 10f, 1f, false, FiringPattern.SingleShot);
                         //if (Units[0].UnitOfficers.Count > 1) unitOfficers[1].Tasks.GoToWhileAiming(location, suspects[1], 10f, 1f, false, FiringPattern.SingleShot);
-                        Units[0].UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 18000);
-                        if (Units[0].UnitOfficers.Count > 1) Units[0].UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
+                        //Units[0].UnitOfficers[0].Tasks.AimWeaponAt(Suspects[0], 18000);
+                        //if (Units[0].UnitOfficers.Count > 1) Units[0].UnitOfficers[1].Tasks.AimWeaponAt(Suspects[1], 18000);
                         foreach (var suspect in Suspects)
                         {
                             if (suspect && Units[0].UnitOfficers[0])
-                                suspect.Tasks.PutHandsUp(120000, Units[0].UnitOfficers[0]);
+                                suspect.Tasks.PutHandsUp(30000, Units[0].UnitOfficers[0]);
                         }
+
+                        AproachingSuspects();
 
                         switch (new Random().Next(0, 5))
                         {
@@ -254,6 +254,24 @@ namespace Fighting
                 return false;
             }
         }
+
+        private void AproachingSuspects()
+        {
+            if (Units[0].UnitOfficers[0] && Suspects[0])
+                Helper.FollowNavMeshToCoord(Units[0].UnitOfficers[0], Suspects[0].Position, 1f, 16000, 4f, true);
+            if (Units[0].UnitOfficers.Count > 1 ? Units[0].UnitOfficers[1] && Suspects[1] : false)
+                Helper.FollowNavMeshToCoord(Units[0].UnitOfficers[1], Suspects[1].Position, 1f, 16000, 4f, true);
+
+            while (Units[0].UnitOfficers[0].DistanceTo(Suspects[0]) > 5f 
+                && Units[0].UnitOfficers[1].DistanceTo(Suspects[1]) > 5f) 
+            { GameFiber.Sleep(800); }
+
+            Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[0], Suspects[0]);
+            if (Units[0].UnitOfficers.Count > 1)
+                if (Units[0].UnitOfficers[1].DistanceTo(Suspects[1]) > 5f)
+                    Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[1], Suspects[1]);
+        }
+
         public override bool End()
         {
             try
