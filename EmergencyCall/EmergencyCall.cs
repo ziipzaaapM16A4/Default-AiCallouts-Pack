@@ -82,14 +82,14 @@ namespace EmergencyCall
                             }
                         }
                         catch { }
-                    });
+                    }, "AIC - EmergencyCall - Anims & Speechbubbles");
 
                     OfficersAproach();
                     startupFinished = true;
 
-                    NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], caller, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                    NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], caller, 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                    NativeFunction.Natives.x5AD23D40115353AC(caller, Units[0].UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                    Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[0], caller);
+                    Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[1], caller);
+                    Helper.TurnPedToFaceEntity(caller, Units[0].UnitOfficers[0]);
                     GameFiber.Sleep(1000);
 
                     var callerAnimation = caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
@@ -136,8 +136,8 @@ namespace EmergencyCall
                     if (Units[0].UnitOfficers.Count > 1)
                     {
                         GameFiber.Sleep(1800);
-                        NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
-                        NativeFunction.Natives.x5AD23D40115353AC(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0], 0);      //TASK_TURN_PED_TO_FACE_ENTITY
+                        Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1]);
+                        Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0]);
                         GameFiber.Sleep(8000);
                     }
                     
@@ -170,7 +170,7 @@ namespace EmergencyCall
             {
                 foreach (var officer in Units[0].UnitOfficers)
                 {
-                    officer.Tasks.FollowNavigationMeshToPosition(caller.Position, MathHelper.ConvertDirectionToHeading(caller.Position), 1f, 3.5f, 15000);
+                    Helper.FollowNavMeshToCoord(officer, caller.Position, 1f, 15000, 3.5f, true);
                 }
                 GameFiber.Sleep(800);
             }

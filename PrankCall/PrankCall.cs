@@ -62,7 +62,9 @@ namespace PrankCall
 
                     LogTrivialDebug_withAiC($"DEBUG: Go Look Around");
                     string[] anims = { "wait_idle_a", "wait_idle_b", "wait_idle_c" };
-                    foreach (var officer in Units[0].UnitOfficers) { officer.Tasks.FollowNavigationMeshToPosition(Location.Around(7f, 10f), Units[0].PoliceVehicle.Heading, 0.6f, 20f, 20000); }                       //ToHeading is useless
+                    foreach (var officer in Units[0].UnitOfficers) {
+                        Helper.FollowNavMeshToCoord(officer, Location.Around(7f, 10f), 0.6f, 20000, 5f, true);
+                    }
                     GameFiber.Sleep(12000);                                                                                                   //Static behavior. bad way                                   
                     for (int i = 0; i < Units[0].UnitOfficers.Count; i++)
                     {
