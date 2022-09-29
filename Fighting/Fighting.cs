@@ -143,7 +143,7 @@ namespace Fighting
                                     if (Units[0].UnitOfficers[i].DistanceTo(Suspects[i]) > 6f)
                                         Units[0].UnitOfficers[i].Tasks.GoToWhileAiming(Suspects[i].Position, Suspects[i].Position, 5f, 1f, false, FiringPattern.SingleShot);
                                     else
-                                        Units[0].UnitOfficers[i].Tasks.AimWeaponAt(Suspects[i], 30000);
+                                        Units[0].UnitOfficers[i].Tasks.AimWeaponAt(Suspects[i].Position, 30000);
                             }
                             GameFiber.Yield();
                         }
@@ -256,6 +256,8 @@ namespace Fighting
             try
             {
                 startLoosingHealth = true;
+                Units[0].PoliceVehicle.IsPersistent = false;
+                foreach (var ofc in Units[0].UnitOfficers) { if (ofc) { ofc.IsPersistent = false; } }
                 foreach (var sus in Suspects) { if (sus) { sus.IsPersistent = false; if (!isPedArrestedOrStoppedByAnyPlugin(sus)) sus.BlockPermanentEvents = false; } }
                 return true;
             }
