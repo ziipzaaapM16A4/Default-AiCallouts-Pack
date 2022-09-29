@@ -16,18 +16,26 @@ namespace OutstandingWarrant
         private static List<Model> ballasModels = new List<Model>() { "G_M_Y_BALLAEAST_01", "G_M_Y_BALLAORIG_01", "G_M_Y_BALLASOUT_01" };
         private static List<Model> vagosModels = new List<Model>() { "G_M_Y_SALVABOSS_01", "G_M_Y_SALVAGOON_01", "G_M_Y_SALVAGOON_02", "G_M_Y_SALVAGOON_03" };
 
-        private static List<AmbientAICallouts.API.PositionWithHeading> spawnPoints = new List<AmbientAICallouts.API.PositionWithHeading>() {
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(-2000f, -2099f, 0f), 0f),                           //Error Position                             //Error Position
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(318.3842f, -1027.835f, 29.21791f), 176.263f),       //Pillbox
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(-273.2328f, 6216.743f, 31.49138f), 130.2843f),      //BlaineCounty noth the lake
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(1731.64f, 3707.406f, 34.1066f), 20.75879f),         //BlaineCounty south of the lake
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(1695.706f, 3763.331f, 34.55957f), 315.3837f),       //BlaineCounty2 south of the lake
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(-291.4056f, 6264.562f, 31.4934f), 224.7562f),       //Blaine County3 at the Hen House - Paleto Blvd, Duluoz Ave
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(1178.465f, 2646.26f, 37.79255f), 359.8123f),        //sherrifscounty 1
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(269.164f, 197.4158f, 104.7828f), 161.2535f),        //Hollywood street
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(11.2466f, -1953.999f, 20.75132f), 41.50063f),       //Grovestreet
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(213.4791f, -1555.299f, 29.29156f), 207.7418f),      //Davis Ave
-            new AmbientAICallouts.API.PositionWithHeading(new Vector3(-289.6428f, -1090.712f, 23.86914f), 242.8085f),     //alita street
+        private static List<PositionWithHeading> spawnPoints = new List<AmbientAICallouts.API.PositionWithHeading>() {
+            new PositionWithHeading(new Vector3(-2000f, -2099f, 0f), 0f),                           //Error Position                             //Error Position
+            new PositionWithHeading(new Vector3(318.3842f, -1027.835f, 29.21791f), 176.263f),       //Pillbox
+            new PositionWithHeading(new Vector3(-273.2328f, 6216.743f, 31.49138f), 130.2843f),      //BlaineCounty noth the lake
+            new PositionWithHeading(new Vector3(1731.64f, 3707.406f, 34.1066f), 20.75879f),         //BlaineCounty south of the lake
+            new PositionWithHeading(new Vector3(1695.706f, 3763.331f, 34.55957f), 315.3837f),       //BlaineCounty2 south of the lake
+            new PositionWithHeading(new Vector3(-291.4056f, 6264.562f, 31.4934f), 224.7562f),       //Blaine County3 at the Hen House - Paleto Blvd, Duluoz Ave
+            new PositionWithHeading(new Vector3(1178.465f, 2646.26f, 37.79255f), 359.8123f),        //sherrifscounty 1
+            new PositionWithHeading(new Vector3(269.164f, 197.4158f, 104.7828f), 161.2535f),        //Hollywood street
+            new PositionWithHeading(new Vector3(-15.38266f, -1824.283f, 25.67691f), 139.3775f),     //Grovestreet
+            new PositionWithHeading(new Vector3(213.4791f, -1555.299f, 29.29156f), 207.7418f),      //Davis Ave
+            new PositionWithHeading(new Vector3(-289.6428f, -1090.712f, 23.86914f), 242.8085f),     //alita street
+            new PositionWithHeading(new Vector3(-935.4056f, -1186.874f, 4.928214f), 208.5413f),     //Vespuci Canals
+            new PositionWithHeading(new Vector3(-1201.859f, -441.2159f, 33.6318f), 29.25782f),      //Rockford Hills
+            new PositionWithHeading(new Vector3(120.009f, -291.3744f, 46.32027f), 153.9427f),       //Alta
+            new PositionWithHeading(new Vector3(-1058.342f, -2720.875f, 13.75664f), 335.9325f),     //Airport
+            new PositionWithHeading(new Vector3(889.7473f, -2255.135f, 30.55893f), 353.2173f),      //Cypress Flats
+            new PositionWithHeading(new Vector3(2554.09f, 4667.98f, 34.02551f), 6.387954f),         //Grapeseed
+            new PositionWithHeading(new Vector3(-1104.278f, 2697.995f, 18.65999f), 219.7468f),      //Zancudo River
+            new PositionWithHeading(new Vector3(133.4628f, 6640.025f, 31.77206f), 224.4618f),      //BlaineCounty4 - Gas station
         };
         
         public override bool Setup()
