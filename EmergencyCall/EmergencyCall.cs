@@ -25,6 +25,7 @@ namespace EmergencyCall
                 Vector3 roadside = new Vector3();
                 bool posFound = false;
                 int trys = 0;
+                bool demandPavement = true;
                 while (!posFound)
                 {
                     roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
@@ -35,7 +36,7 @@ namespace EmergencyCall
                     //NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     //NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
-                    NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(roadside, true, out roadside, 16);
+                    NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(roadside, demandPavement, out roadside, 16);
                     Location = roadside;
 
 
@@ -43,7 +44,8 @@ namespace EmergencyCall
                         posFound = true;
 
                     trys++;
-                    if (trys >= 30) { LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): unable to find safe coords for this event"); return false; }
+                    if (trys == 30) { demandPavement = false; }
+                    if (trys >= 60) { LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): unable to find safe coords for this event"); return false; }
                 }
 
                 caller = new Ped(Location);
@@ -84,12 +86,12 @@ namespace EmergencyCall
                         catch { }
                     }, "AIC - EmergencyCall - Anims & Speechbubbles");
 
-                    OfficersAproach();
+                    Helper.PedsAproachAndFaceUntilReached(Units[0].UnitOfficers, caller.Position, 1f, 5f);
                     startupFinished = true;
 
-                    Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[0], caller);
-                    Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[1], caller);
-                    Helper.TurnPedToFaceEntity(caller, Units[0].UnitOfficers[0]);
+                    Helper.TurnPedToFace(Units[0].UnitOfficers[0], caller);
+                    Helper.TurnPedToFace(Units[0].UnitOfficers[1], caller);
+                    Helper.TurnPedToFace(caller, Units[0].UnitOfficers[0]);
                     GameFiber.Sleep(1000);
 
                     var callerAnimation = caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
@@ -136,8 +138,8 @@ namespace EmergencyCall
                     if (Units[0].UnitOfficers.Count > 1)
                     {
                         GameFiber.Sleep(1800);
-                        Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1]);
-                        Helper.TurnPedToFaceEntity(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0]);
+                        Helper.TurnPedToFace(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1]);
+                        Helper.TurnPedToFace(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0]);
                         GameFiber.Sleep(8000);
                     }
                     
@@ -152,28 +154,6 @@ namespace EmergencyCall
                 return false;
             }
             finally { if (caller) caller.IsPersistent = false;}
-        }
-
-        private void OfficersAproach()
-        {
-            GameFiber.WaitWhile(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) >= 40f, 25000);
-            Units[0].PoliceVehicle.IsSirenSilent = true;
-            Units[0].PoliceVehicle.TopSpeed = 12f;
-            OfficerReportOnScene(Units[0]);
-
-            GameFiber.SleepUntil(() => Location.DistanceTo(Units[0].PoliceVehicle.Position) < arrivalDistanceThreshold + 5f /* && Units[0].PoliceVehicle.Speed <= 1*/, 30000);
-            Units[0].PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
-            GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Speed <= 1, 5000);
-            OfficersLeaveVehicle(Units[0],false);
-
-            while (Units[0].UnitOfficers[0].DistanceTo(caller) > 5f || (Units[0].UnitOfficers.Count > 1 ? Units[0].UnitOfficers[1].DistanceTo(caller) > 5f : true))
-            {
-                foreach (var officer in Units[0].UnitOfficers)
-                {
-                    Helper.FollowNavMeshToCoord(officer, caller.Position, 1f, 15000, 3.5f, true);
-                }
-                GameFiber.Sleep(800);
-            }
         }
 
         public override bool End()
