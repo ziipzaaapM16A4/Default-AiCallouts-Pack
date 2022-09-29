@@ -147,6 +147,7 @@ namespace Fighting
                             }
                             GameFiber.Yield();
                         }
+                        foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_UNARMED"), 1, true); }
                         status = Estate.exploration;
                     }
                     //Aproaching while suspects not in combat
