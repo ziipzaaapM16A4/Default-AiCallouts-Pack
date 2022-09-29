@@ -164,7 +164,7 @@ namespace Fighting
                         Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll head back then", 4000);
                         GameFiber.Sleep(5000);
                         EnterAndDismiss(Units[0]);
-
+                        callactive = false;
                     }
                     //arrested or in investigation ->> wait until completed
                     else if (status == Estate.exploration && Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false))
@@ -213,6 +213,7 @@ namespace Fighting
 
                         GameFiber.Sleep(5100);
                         EnterAndDismiss(Units[0]);
+                        callactive = false;
 
                         LogTrivial_withAiC($"INFO: Call Finished");
                     }
@@ -235,6 +236,7 @@ namespace Fighting
                         }
                         GameFiber.Sleep(15000);
                         while (LSPDFR_Functions.IsCalloutRunning()) { GameFiber.Sleep(11000); } //OLD: OfficerRequiringAssistance.finished or OfficerInPursuit.finished
+                        callactive = false;
                     }
 
                     GameFiber.Sleep(500);
