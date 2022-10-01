@@ -23,6 +23,7 @@ namespace EmergencyCall
                 if (rand.Next(0, 2) == 0) { ResponseType = EResponseType.Code3; } else { ResponseType = EResponseType.Code2; }
 
                 Vector3 roadside = new Vector3();
+                Vector3 streetDirection = new Vector3();
                 bool posFound = false;
                 int trys = 0;
                 bool demandPavement = true;
@@ -49,6 +50,11 @@ namespace EmergencyCall
                 }
 
                 caller = new Ped(Location);
+                Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(caller.Position, out streetDirection, 0, 3f, 0f); //GET_CLOSEST_VEHICLE_NODE
+                Helper.TurnPedToFace(caller, streetDirection);
+                GameFiber.Sleep(2500);
+                caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
+
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
@@ -68,34 +74,16 @@ namespace EmergencyCall
                 }
                 else
                 {
-                    bool startupFinished = false;
-                    GameFiber.StartNew(delegate
-                    {
-                        try
-                        {
-                            while (Game.LocalPlayer.Character.Position.DistanceTo(caller) > 26f && !startupFinished)
-                            {
-                                GameFiber.Sleep(200);
-                            }
-                            if (!startupFinished)
-                            {
-                                caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
-                                for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.PlayAnimation(new AnimationDictionary("amb@code_human_wander_idles_cop@male@static"), "static", 1f, AnimationFlags.Loop); }
-                            }
-                        }
-                        catch { }
-                    }, "AIC - EmergencyCall - Anims & Speechbubbles");
-
                     OfficersArrive();
-                    Helper.PedsAproachAndFaceUntilReached(Units[0].UnitOfficers, caller.Position, 1f, 5f);
-                    startupFinished = true;
+                    Helper.PedsAproachAndFaceUntilReached(Units[0].UnitOfficers, caller.Position, 1f, 4f);
+
 
                     foreach (var ofc in Units[0].UnitOfficers) { Helper.TurnPedToFace(ofc, caller); }
                     Helper.TurnPedToFace(caller, Units[0].UnitOfficers[0]);
                     GameFiber.Sleep(2000);
 
                     NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_MEDIC_TIME_OF_DEATH", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
-                    NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "WORLD_HUMAN_COP_IDLES", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
+                    NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
                     var callerAnimation = caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
 
                     GameFiber.SleepWhile(() => Units[0].UnitOfficers.Any( ofc => Helper.IsTaskActive(ofc, 118)), 60000);

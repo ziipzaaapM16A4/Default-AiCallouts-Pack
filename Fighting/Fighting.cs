@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Rage;
+using Rage.Native;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using Functions = AmbientAICallouts.API.Functions;
 using AmbientAICallouts.API;
@@ -161,6 +162,9 @@ namespace Fighting
                     else if (status == Estate.exploration && Suspects.All(s => s ? LSPDFR_Functions.IsPedArrested(s) : false))
                     {
                         LogTrivial_withAiC($"INFO: Situation seems to be under control. Leaving because all suspects are arrested");
+                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_POLICE_INVESTIGATE", 7000, true);  //TASK_START_SCENARIO_IN_PLACE
+                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 7000, true);  //TASK_START_SCENARIO_IN_PLACE
+                        GameFiber.Sleep(2000);
                         Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll head back then", 4000);
                         GameFiber.Sleep(5000);
                         EnterAndDismiss(Units[0]);
@@ -170,11 +174,16 @@ namespace Fighting
                     else if (status == Estate.exploration && Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false))
                     {
                         LogTrivial_withAiC($"INFO: Situation seems to be under control. waiting for Player to finish");
+                        GameFiber.Sleep(2000);
+                        Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll stay until you finished", 5000);
+                        GameFiber.Sleep(2000);
                         Helper.TurnPedToFace(Units[0].UnitOfficers[0], Suspects[0]);
                         if (Units[0].UnitOfficers.Count > 1) Helper.TurnPedToFace(Units[0].UnitOfficers[1], Suspects[1]);
-
-                        Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll stay until you finished", 4000);
-                        GameFiber.WaitWhile(() => Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false) && Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true), 360000);
+                        GameFiber.Sleep(2500);
+                        
+                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_POLICE_INVESTIGATE", 600000, true);  //TASK_START_SCENARIO_IN_PLACE
+                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 600000, true);  //TASK_START_SCENARIO_IN_PLACE
+                        GameFiber.WaitWhile(() => Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false) && Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true), 604000);
 
                         if (Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true))
                         {
@@ -199,7 +208,8 @@ namespace Fighting
                     else if (status == Estate.handling)
                     {
                         LogTrivial_withAiC($"INFO: chose selfhandle path");
-
+                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "WORLD_HUMAN_COP_IDLES", 12000, true);  //TASK_START_SCENARIO_IN_PLACE
+                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 12000, true);  //TASK_START_SCENARIO_IN_PLACE
                         foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.PutHandsUp(6000, Units[0].UnitOfficers[0]); }
                         GameFiber.Sleep(7000);
 
