@@ -36,7 +36,7 @@ namespace EmergencyCall
                     //NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     //NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
-                    NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(roadside, demandPavement, out roadside, 16);
+                    NativeFunction.Natives.xB61C8E878A4199CA<bool>(roadside, demandPavement, out roadside, 16); //GET_SAFE_COORD_FOR_PED
                     Location = roadside;
 
 
@@ -102,7 +102,7 @@ namespace EmergencyCall
                         try
                         {
                             notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
-                            notepad.AttachTo(Units[0].UnitOfficers[0], NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+                            notepad.AttachTo(Units[0].UnitOfficers[0], NativeFunction.Natives.x3F428D08BE5AAE31<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f)); //GET_PED_BONE_INDEX
                             var taskPullsOutNotebook = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@enter"), "enter", 2f, AnimationFlags.None);
                             GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
                             Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@base"), "base", 2f, AnimationFlags.Loop);

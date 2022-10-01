@@ -58,7 +58,7 @@ namespace ShotsFired
                     //NativeFunction.Natives.xA0F8A7517A273C05<bool>(roadside.X, roadside.Y, roadside.Z, heading, out roadside); //_GET_ROAD_SIDE_POINT_WITH_HEADING
                     //NativeFunction.Natives.xFF071FB798B803B0<bool>(roadside.X, roadside.Y, roadside.Z, out irrelevant, out heading, 0, 3.0f, 0f); //GET_CLOSEST_VEHICLE_NODE_WITH_HEADING //Find Side of the road.
 
-                    NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(roadside, true, out roadside, 16);
+                    NativeFunction.Natives.xB61C8E878A4199CA<bool>(roadside, true, out roadside, 16); //GET_SAFE_COORD_FOR_PED
                     Location = roadside;
 
 
@@ -242,7 +242,7 @@ namespace ShotsFired
                         //Wenn der Player NACH den AiUnits den Suspect sieht.
                         if (aiSpottedSuspect && !playerSpottedSuspect)
                         {
-                            if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])
+                            if (NativeFunction.Natives.xFCDFF7B72D23A1AC<bool>(Game.LocalPlayer.Character, Suspects[0]) //HAS_ENTITY_CLEAR_LOS_TO_ENTITY
                                 && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 40f + (playerRespondingInAdditon ? 30f : 0f))
                             {
                                 LogVerboseDebug_withAiC("player has now visual on suspect too");
@@ -269,7 +269,7 @@ namespace ShotsFired
                                 {
                                     //Able to spot the Suspect
                                     if (!aiSpottedSuspect)
-                                        if (NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(o, Suspects[0])
+                                        if (NativeFunction.Natives.xFCDFF7B72D23A1AC<bool>(o, Suspects[0]) //HAS_ENTITY_CLEAR_LOS_TO_ENTITY
                                             && o.DistanceTo(Suspects[0]) < 50f)
                                         {
                                             LogVerboseDebug_withAiC("Officer " + o + " has visual on suspect");
@@ -385,7 +385,7 @@ namespace ShotsFired
         {
             return
                     //has visual in a certain distance - kann ihn über eine bestimmte distance sehen
-                    NativeFunction.Natives.HAS_ENTITY_CLEAR_LOS_TO_ENTITY<bool>(Game.LocalPlayer.Character, Suspects[0])                        
+                    NativeFunction.Natives.xFCDFF7B72D23A1AC<bool>(Game.LocalPlayer.Character, Suspects[0])             //HAS_ENTITY_CLEAR_LOS_TO_ENTITY            
                     && Game.LocalPlayer.Character.Position.DistanceTo(Suspects[0]) <= 25f + (playerRespondingInAdditon ? 8f : 0f) + (Game.LocalPlayer.Character.IsInAnyVehicle(false) ? 8f : 0f)
                     
                     ||

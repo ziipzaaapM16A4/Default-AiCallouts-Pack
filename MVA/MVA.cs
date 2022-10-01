@@ -89,7 +89,7 @@ namespace MVA
                                     if (Suspects[i] 
                                     && !senarioTaskAsigned 
                                     && !finished
-                                    && !NativeFunction.Natives.GET_IS_TASK_ACTIVE<bool>(Suspects[i], 35)
+                                    && !Helper.IsTaskActive(Suspects[i], 35)
                                     && !IsPedOccupiedbyLSPDFRInteraction(Suspects[i])
                                     )
                                     {
@@ -202,7 +202,7 @@ namespace MVA
                             try
                             {
                                 notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
-                                notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+                                notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.x3F428D08BE5AAE31<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f)); //GET_PED_BONE_INDEX
 
                                 var taskPullsOutNotebook = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@enter"), "enter", 2f, AnimationFlags.None);
                                 GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
@@ -255,10 +255,10 @@ namespace MVA
                                     )
                                     {
 
-                                        if (!NativeFunction.Natives.GET_IS_TASK_ACTIVE<bool>(Units[0].UnitOfficers[0], 35))
+                                        if (!Helper.IsTaskActive(Units[0].UnitOfficers[0], 35))
                                             Units[0].UnitOfficers[0].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].GetOffsetPosition(new Vector3(2.5f + 1.8f, -1f, 0f)), heading + 69f, 1f, 1f, 20000);
 
-                                        if (!NativeFunction.Natives.GET_IS_TASK_ACTIVE<bool>(Units[0].UnitOfficers[1], 35))
+                                        if (!Helper.IsTaskActive(Units[0].UnitOfficers[1], 35))
                                             Units[0].UnitOfficers[1].Tasks.FollowNavigationMeshToPosition(SuspectsVehicles[0].GetOffsetPosition(new Vector3(2.5f + 1.8f, +2f, 0f)), heading + 110f, 1f, 1f, 20000);  //Note: steht am weitesten vorne von allen personen am unfall
                                     
                                         count++;
@@ -274,7 +274,7 @@ namespace MVA
                                 try
                                 {
                                     notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
-                                    notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+                                    notepad.AttachTo(Units[0].UnitOfficers[0], NativeFunction.Natives.x3F428D08BE5AAE31<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f)); //GET_PED_BONE_INDEX
 
                                     var taskPullsOutNotebook = Units[0].UnitOfficers[0].Tasks.PlayAnimation(new AnimationDictionary("amb@medic@standing@timeofdeath@enter"), "enter", 2f, AnimationFlags.None);
                                     GameFiber.SleepUntil(() => taskPullsOutNotebook.CurrentTimeRatio > 0.92f, 10000);
@@ -394,7 +394,7 @@ namespace MVA
                                         try
                                         {
                                             notepad = new Rage.Object("prop_notepad_02", Units[0].UnitOfficers[0].Position, 0f);
-                                            notepad.AttachTo(Units[0].UnitOfficers[0], Rage.Native.NativeFunction.Natives.GET_PED_BONE_INDEX<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f));
+                                            notepad.AttachTo(Units[0].UnitOfficers[0], NativeFunction.Natives.x3F428D08BE5AAE31<int>(Units[0].UnitOfficers[0], 18905), new Vector3(0.16f, 0.05f, -0.01f), new Rotator(-37f, -19f, .32f)); //GET_PED_BONE_INDEX
 
                                             if (Units[0].UnitOfficers[0])
                                                 if (LSPDFR_Functions.IsCopBusy(Units[0].UnitOfficers[0], false))
@@ -898,7 +898,7 @@ namespace MVA
         private void NothingHappens()
         {
             LogTrivialDebug_withAiC(" DEBUG: NothingHappens() entered");
-            int a = 0; while (a < 46/*seconds*/) if (!Game.IsPaused && !Rage.Native.NativeFunction.Natives.IS_PAUSE_MENU_ACTIVE<bool>()) { a++; GameFiber.Sleep(1000); }        //sleep wait for action until player is back in game
+            int a = 0; while (a < 46/*seconds*/) if (!Helper.IsGamePaused()) { a++; GameFiber.Sleep(1000); }        //sleep wait for action until player is back in game
             Helper.TurnPedToFace(Units[0].UnitOfficers[0], Game.LocalPlayer.Character);
             GameFiber.Sleep(1000);
             Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "GENERIC_THANKS", 0, SpeechModifier.Force); 

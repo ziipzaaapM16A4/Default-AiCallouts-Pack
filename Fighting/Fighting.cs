@@ -35,7 +35,7 @@ namespace Fighting
                 Vector3 tmp = new Vector3();
                 while (!posFound)
                 {
-                    Rage.Native.NativeFunction.Natives.GET_SAFE_COORD_FOR_PED<bool>(Game.LocalPlayer.Character.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f), demandPavement, out tmp, 16);
+                    Rage.Native.NativeFunction.Natives.xB61C8E878A4199CA<bool>(Game.LocalPlayer.Character.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f), demandPavement, out tmp, 16); //GET_SAFE_COORD_FOR_PED
                     Location = tmp;
                     if (Functions.IsLocationAcceptedBySystem(Location))
                         posFound = true;
