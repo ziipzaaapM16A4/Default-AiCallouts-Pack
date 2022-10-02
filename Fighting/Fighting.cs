@@ -251,14 +251,13 @@ namespace Fighting
 
                     GameFiber.Sleep(500);
                 }
-
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
-                End();
+                AbortCode();
                 return false;
             }
         }
@@ -268,7 +267,7 @@ namespace Fighting
             try
             {
                 startLoosingHealth = true;
-                Units[0].PoliceVehicle.IsPersistent = false;
+                if (Units[0].PoliceVehicle) Units[0].PoliceVehicle.IsPersistent = false;
                 foreach (var ofc in Units[0].UnitOfficers) { if (ofc) { ofc.IsPersistent = false; } }
                 foreach (var sus in Suspects) { if (sus) { sus.IsPersistent = false; if (!isPedArrestedOrStoppedByAnyPlugin(sus)) sus.BlockPermanentEvents = false; } }
                 return true;
