@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // Allgemeine Informationen über eine Assembly werden über die folgenden
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
-[assembly: AssemblyTitle("OutstandingWarrant")]
+[assembly: AssemblyTitle("ArrestWarrant")]
 [assembly: AssemblyDescription("AiCallout - included in Default-AiCallouts-Pack for AmbientAICallouts")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("OutstandingWarrant")]
+[assembly: AssemblyProduct("ArrestWarrant")]
 [assembly: AssemblyCopyright("Copyright © ziipzaaapM16A4 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

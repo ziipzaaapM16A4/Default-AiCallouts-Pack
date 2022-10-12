@@ -8,9 +8,9 @@ using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using AmbientAICallouts.API;
 using System.Xml;
 
-namespace OutstandingWarrant
+namespace ArrestWarrant
 {
-    public class OutstandingWarrant : AiCallout
+    public class ArrestWarrant : AiCallout
     {
         private static List<Model> lostModels = new List<Model>() { "G_M_Y_LOST_01", "G_M_Y_LOST_02", "G_M_Y_LOST_03" };
         private static List<Model> ballasModels = new List<Model>() { "G_M_Y_BALLAEAST_01", "G_M_Y_BALLAORIG_01", "G_M_Y_BALLASOUT_01" };
@@ -42,7 +42,7 @@ namespace OutstandingWarrant
         {
             try
             {
-                SceneInfo = "Outstanding Warrant";
+                SceneInfo = "Arrest Warrant";
 
                 var nextLocation = spawnPoints[0];
                 foreach (var checkLocation in spawnPoints)
@@ -56,7 +56,7 @@ namespace OutstandingWarrant
                 if (nextLocation.Position == spawnPoints[0].Position) { LogTrivial_withAiC("ERROR: Aborting AiCallout because of missing spawnpoint matching the callout distance"); return false; }
 
                 Location = nextLocation.Position;
-                CalloutDetailsString = "OUTSTANDING_WARRANT";
+                CalloutDetailsString = "ARREST_WARRANT";
                arrivalDistanceThreshold = 15f;
 
                 Functions.SetupSuspects(MO, 1);
@@ -163,7 +163,7 @@ namespace OutstandingWarrant
                             }
                             catch (System.Threading.ThreadAbortException) { }
                             catch (Exception e) { LogTrivialDebug_withAiC($"ERROR: in Animation maker Fiber: {e}"); }
-                        }, $"[AmbientAICallouts] [AiCallout] OutstandingWarrant - Animation maker Fiber");
+                        }, $"[AmbientAICallouts] [AiCallout] ArrestWarrant - Animation maker Fiber");
 
                     
 
