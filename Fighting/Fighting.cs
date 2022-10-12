@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Rage;
+using Rage.Native;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using Functions = AmbientAICallouts.API.Functions;
 using AmbientAICallouts.API;
@@ -17,7 +18,7 @@ namespace Fighting
         private Version stpVersion = new Version("4.9.4.7");
         private bool isSTPRunning = false;
         bool startLoosingHealth = false;
-        enum Estate { driving, parking, approaching, exploration, handling, requestingbackup };
+        enum Estate { driving, parking, approaching, investigation, handling, requestingbackup };
 
         public override bool Setup()
         {
@@ -52,22 +53,6 @@ namespace Fighting
                 LSPDFR_Functions.SetPedResistanceChance(Suspects[0], 0.35f);
                 LSPDFR_Functions.SetPedResistanceChance(Suspects[1], 0.35f);
 
-                GameFiber.StartNew(delegate {
-                    try
-                    {
-                        while (!startLoosingHealth)
-                        {
-                            foreach (var suspect in Suspects)
-                            {
-                                try { suspect.Health = 200; } catch { }
-                            }
-                            if (!Suspects.Any(p => p)) break;
-                            GameFiber.Sleep(1000);
-                        }
-                    }
-                    catch { }
-                });
-
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
@@ -82,17 +67,21 @@ namespace Fighting
             try
             {
                 bool callactive = true;
-                int arrivalCounter = 0;
+                uint timeStamp = Game.GameTime;
                 Estate status = Estate.driving;
+                int statusChild = 0;
 
                 LHandle pursuit;
+                bool pursuitWasSelfInitiated = false;
 
 
                 while (callactive)
                 {
                     //Pursuit - Any suspect in pursuit? -->> hunt felon
-                    if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null && Suspects.Any(s => (s ? LSPDFR_Functions.IsPedInPursuit(s) : false)))
+                    if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null && Suspects.Any(s => (s ? LSPDFR_Functions.IsPedInPursuit(s) : false)) && !pursuitWasSelfInitiated)
                     {
+                        LogTrivial_withAiC("Fighting turned into a Chase. Starting Pursuit");
+                        Units[0].PoliceVehicle.TopSpeed = 45f;
                         foreach (var cop in Units[0].UnitOfficers) { LSPDFR_Functions.AddCopToPursuit(pursuit, cop); }
 
                         if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit) 
@@ -101,154 +90,406 @@ namespace Fighting
 
                         //aic.OnScene = true; //Missing OnScene detail
                         Units[0].UnitStatus = EUnitStatus.OnScene;
-                        GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 360000);
-                        callactive = false; //LSPDFR Pursuit managed ab jetzt
+                        GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 360000); //LSPDFR Pursuit managed ab jetzt
+                        callactive = false;
                     }
                     //Normal response
                     else if (status == Estate.driving)
                     {
-                        if (Units[0].PoliceVehicle.Position.DistanceTo(Location) < 100f) { status = Estate.parking; }
-                        else if ((Helper.IsGamePaused() ? arrivalCounter : arrivalCounter++) > 130 * 2 /*500ms sleep*/) { Disregard(); callactive = false; } //Depending on the Sleep duration
+                        if (Units[0].PoliceVehicle.Position.DistanceTo(Location) < 70f) { timeStamp = Game.GameTime; status = Estate.parking; }
+                        else if (timeStamp + 130 * 1000 < Game.GameTime) { Disregard(); callactive = false; }
                     }
                     //Arriving and Parking the Vehicle
                     else if (status == Estate.parking)
                     {
-                        if (Units[0].PoliceVehicle.Position.DistanceTo(Location) < 40f)
+                        if (statusChild == 0 && (Units[0].PoliceVehicle.Position.DistanceTo(Location) < 40f || timeStamp + 25 * 1000 < Game.GameTime))    //15 Sec
                         {
+                            startLoosingHealth = true;
                             Units[0].PoliceVehicle.IsSirenSilent = true;
                             Units[0].PoliceVehicle.TopSpeed = 12f;
                             OfficerReportOnScene(Units[0]);
-
-                            GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) < arrivalDistanceThreshold + 5f, 30000);
-                            Units[0].PoliceVehicle.Driver.Tasks.PerformDrivingManeuver(VehicleManeuver.Wait);
-                            GameFiber.SleepUntil(() => Units[0].PoliceVehicle.Speed <= 1, 5000);
-                            OfficersLeaveVehicle(Units[0], true);
-
-                            startLoosingHealth = true;
+                            timeStamp = Game.GameTime;
+                            statusChild = 1;
+                        }
+                        else if (Location.DistanceTo(Units[0].PoliceVehicle.Position) < arrivalDistanceThreshold + 5f || timeStamp + 25 * 1000 < Game.GameTime) //15 Sec
+                        {
+                            OfficersLeaveVehicle(Units[0], true);                                                   //Sleeping Fiber
+                            timeStamp = Game.GameTime;
+                            statusChild = 0;
                             status = Estate.approaching;
                         }
                     }
-                    //Aproaching while suspects in combat
-                    else if (status == Estate.approaching && Suspects.Any(s => s ? Helper.IsTaskActive(s, 343) : false))
+                    //Aproaching
+                    else if (status == Estate.approaching)
                     {
-                        LogTrivialDebug_withAiC($"INFO: Approaching by guns drawn due to combat");
-                        foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true); }
-
-                        while (Units[0].UnitOfficers[0].DistanceTo(Suspects[0]) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[0], 230) || (Units[0].UnitOfficers.Count > 1 ?
-                            Units[0].UnitOfficers[1].DistanceTo(Suspects[1]) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[1], 230) : false))
+                        //Aproaching while suspects in combat
+                        if (Suspects.Any(s => s ? Helper.IsTaskActive(s, 343) : false))
                         {
-                            for (int i = 0; (Units[0].UnitOfficers.Count == 1 ? i < 1 : i < 2); i++)
+                            if ((Units[0].UnitOfficers[0].DistanceTo(Suspects[0]) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[0], 230) || (Units[0].UnitOfficers.Count > 1 ?
+                                Units[0].UnitOfficers[1].DistanceTo(Suspects[1]) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[1], 230) : false)
+                                ) && timeStamp + 60 * 1000 > Game.GameTime)
                             {
-                                if (Helper.IsTaskActive(Units[0].UnitOfficers[i], 15))
-                                    if (Units[0].UnitOfficers[i].DistanceTo(Suspects[i]) > 6f)
-                                        Units[0].UnitOfficers[i].Tasks.GoToWhileAiming(Suspects[i].Position, Suspects[i].Position, 5f, 1f, false, FiringPattern.SingleShot);
-                                    else
-                                        Units[0].UnitOfficers[i].Tasks.AimWeaponAt(Suspects[i].Position, 30000);
+                                foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 30, true); }
+                                for (int i = 0; (Units[0].UnitOfficers.Count == 1 ? i < 1 : i < 2); i++)
+                                {
+                                    if (Helper.IsTaskActive(Units[0].UnitOfficers[i], 15))
+                                        if (Units[0].UnitOfficers[i].DistanceTo(Suspects[i]) > 6f)
+                                            Units[0].UnitOfficers[i].Tasks.GoToWhileAiming(Suspects[i].Position, Suspects[i].Position, 5f, 1f, false, FiringPattern.SingleShot);
+                                        else
+                                            Units[0].UnitOfficers[i].Tasks.AimWeaponAt(Suspects[i].Position, 30000);
+                                }
+                            } else
+                            {
+                                foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_UNARMED"), 1, true); }
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                status = Estate.investigation;
                             }
-                            GameFiber.Yield();
                         }
-                        foreach (var officer in Units[0].UnitOfficers) { officer.Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_UNARMED"), 1, true); }
-                        status = Estate.exploration;
-                    }
-                    //Aproaching while suspects not in combat
-                    else if (status == Estate.approaching) 
-                    {
-                        LogTrivialDebug_withAiC($"INFO: Approaching by walking due to no combat");
-                        Helper.PedsAproachAndFaceUntilReached(Units[0].UnitOfficers, Game.LocalPlayer.Character.Position, 1.1f, 5f);
-                        status = Estate.exploration;
-                    }
-                    //all arrested ->> officers leave
-                    else if (status == Estate.exploration && Suspects.All(s => s ? LSPDFR_Functions.IsPedArrested(s) : false))
-                    {
-                        LogTrivial_withAiC($"INFO: Situation seems to be under control. Leaving because all suspects are arrested");
-                        Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll head back then", 4000);
-                        GameFiber.Sleep(5000);
-                        EnterAndDismiss(Units[0]);
-                        callactive = false;
-                    }
-                    //arrested or in investigation ->> wait until completed
-                    else if (status == Estate.exploration && Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false))
-                    {
-                        LogTrivial_withAiC($"INFO: Situation seems to be under control. waiting for Player to finish");
-                        Helper.TurnPedToFace(Units[0].UnitOfficers[0], Suspects[0]);
-                        if (Units[0].UnitOfficers.Count > 1) Helper.TurnPedToFace(Units[0].UnitOfficers[1], Suspects[1]);
-
-                        Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll stay until you finished", 4000);
-                        GameFiber.WaitWhile(() => Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false) && Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true), 360000);
-
-                        if (Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true))
+                        //One Died and none is in stopped by player or plugin      -> So basically we check if there is one dead + one alive, then get the murderer and check if he is already stopped by player. 
+                        else if ( Suspects.Any(sus => sus.IsDead) && Suspects.Any(sus => sus.IsAlive) ? Suspects.First(sus => sus.IsAlive) is var murderer && !isPedArrestedOrStoppedByAnyPlugin(murderer) : false)
                         {
-                            Game.DisplaySubtitle($"~b~Cop~w~: Alright. See ya", 4000);
-                            GameFiber.Sleep(5000);
-                            EnterAndDismiss(Units[0]);
-                            callactive = false;
+                            if ((Units[0].UnitOfficers[0].DistanceTo(Suspects.First(s => s.IsDead).Position) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[0], 230) || (Units[0].UnitOfficers.Count > 1 ?
+                                Units[0].UnitOfficers[1].DistanceTo(Suspects.First(s => s.IsDead).Position) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[1], 230) : false)
+                                ) && timeStamp + 60 * 1000 > Game.GameTime)
+                            {
+                                for (int i = 0; (Units[0].UnitOfficers.Count == 1 ? i < 1 : i < 2); i++)
+                                {
+                                    if (!Helper.IsTaskActive(Units[0].UnitOfficers[i], 35))
+                                    {
+                                        Helper.FollowNavMeshToCoord(Units[0].UnitOfficers[i], Suspects.First(s => s.IsDead).Position, 1.8f, 8000, 5f, true);   //someone died
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                status = Estate.investigation;
+                            }
+                        }
+                        //All Alive or player interefered
+                        else
+                        {
+                            if ((Units[0].UnitOfficers[0].DistanceTo(Suspects[0]) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[0], 230) || (Units[0].UnitOfficers.Count > 1 ?
+                                Units[0].UnitOfficers[1].DistanceTo(Suspects[1]) > 6f || Helper.IsTaskActive(Units[0].UnitOfficers[1], 230) : false)
+                                ) && timeStamp + 60 * 1000 > Game.GameTime)
+                            {
+                                for (int i = 0; (Units[0].UnitOfficers.Count == 1 ? i < 1 : i < 2); i++)
+                                {
+                                    if (!Helper.IsTaskActive(Units[0].UnitOfficers[i], 35))
+                                    {
+                                        Helper.FollowNavMeshToCoord(Units[0].UnitOfficers[i], Suspects[i].Position, 1.1f, 8000, 5f, true);   //relax - no one in combat and 
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                status = Estate.investigation;
+                            }
                         }
                     }
-                    //aihandle (non of the above) --> use automated old code
-                    else if (status == Estate.exploration)
+                    //investigation
+                    else if (status == Estate.investigation)
                     {
-                        LogTrivial_withAiC($"INFO: Player did not took control over the situation");
-                        if (IsAiTakingCare()) {
-                            status = Estate.handling;
-                        } else   
-                        {
-                            status = Estate.requestingbackup;                                      //Callout
+                        if (statusChild == 0) {
+                            if (Suspects.All(s => s ? LSPDFR_Functions.IsPedArrested(s) : false))
+                            { statusChild = 1; LogTrivial_withAiC($"INFO: Situation seems to be under control. Leaving because all suspects are arrested"); }
+                            else if (Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false))
+                            { statusChild = 2; LogTrivial_withAiC($"INFO: Situation seems to be under control. Waiting for Player to finish"); }
+                            else
+                            { statusChild = 3; LogTrivial_withAiC($"INFO: Player did not took control over the situation"); } 
                         }
 
+                        //all arrested ->> officers leave
+                        else if (statusChild == 1 || 10 < statusChild && statusChild < 20) {
+                            if (statusChild == 1) { statusChild = 12; }
+                            else if (statusChild == 12)
+                            {
+                                NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_POLICE_INVESTIGATE", 7000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 7000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                statusChild = 13;
+                            }
+                            else if (statusChild == 13 && timeStamp + 2 * 1000 < Game.GameTime)  //2 Sec
+                            {
+                                Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll head back then", 4000);
+                                timeStamp = Game.GameTime;
+                                statusChild = 14;
+                            }
+                            else if (statusChild == 14 && timeStamp + 5 * 1000 < Game.GameTime) //5 Sec
+                            {
+                                EnterAndDismiss(Units[0]);
+
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                callactive = false;
+                            }
+                        }
+                        //arrested or in investigation ->> wait until completed
+                        else if (statusChild == 2 || 20 < statusChild && statusChild < 30)
+                        {
+                            if (statusChild == 2 && timeStamp + 2 * 1000 < Game.GameTime)
+                            {
+                                Game.DisplaySubtitle($"~b~Cop~w~: You seem to have this under control. " + (Units[0].UnitOfficers.Count > 1 ? "We" : "I") + "'ll stay until you finished", 5000);
+                                timeStamp = Game.GameTime;
+                                statusChild = 22;
+                            }
+                            else if (statusChild == 22 && timeStamp + 2 * 1000 < Game.GameTime)
+                            {
+                                Helper.TurnPedToFace(Units[0].UnitOfficers[0], Suspects[0]);
+                                if (Units[0].UnitOfficers.Count > 1) Helper.TurnPedToFace(Units[0].UnitOfficers[1], Suspects[1]);
+                                timeStamp = Game.GameTime;
+                                statusChild = 23;
+                            }
+                            else if (statusChild == 23 && timeStamp + 2.5 * 1000 < Game.GameTime)
+                            {
+                                NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_POLICE_INVESTIGATE", 600000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 600000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                timeStamp = Game.GameTime;
+                                statusChild = 24;
+                            }
+                            else if (statusChild == 24)
+                            {
+                                if (!(Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false) && Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true))
+                                    || timeStamp + 604 * 1000 < Game.GameTime)
+                                {
+                                    timeStamp = Game.GameTime;
+                                    statusChild = 25;
+                                }
+                            }
+                            else if (statusChild == 25)
+                            {
+                                if (Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true))
+                                {
+                                    Game.DisplaySubtitle($"~b~Cop~w~: Alright. See ya", 4000);
+                                    statusChild = 26;
+                                }
+                            } else if (statusChild == 26 && timeStamp + 5 * 1000 < Game.GameTime)
+                            {
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                callactive = false;
+                                EnterAndDismiss(Units[0]);
+                            }
+                        }
+                        //aihandle (non of the above) --> use automated old code
+                        else if (statusChild == 3)
+                        {
+                            if (IsAiTakingCare())
+                            {
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                status = Estate.handling;
+                            }
+                            else
+                            {
+                                timeStamp = Game.GameTime;
+                                statusChild = 0;
+                                status = Estate.requestingbackup;                                      //Callout
+                            }
+                        }
+
+
                     }
+                    //Selfhandle
                     else if (status == Estate.handling)
                     {
-                        LogTrivial_withAiC($"INFO: chose selfhandle path");
-
-                        foreach (var suspect in Suspects) { if (suspect) suspect.Tasks.PutHandsUp(6000, Units[0].UnitOfficers[0]); }
-                        GameFiber.Sleep(7000);
-
-                        foreach (var suspect in Suspects)
+                        if (statusChild == 0)
                         {
-                            if (suspect) {
-                                suspect.Tasks.Flee(Units[0].UnitOfficers[0], 100f, 30000);
-                                suspect.IsPersistent = false;
+                            LogTrivial_withAiC($"INFO: Chose selfhandle path");
+                            if (Suspects.Any(sus => sus.IsDead) && Suspects.Any(sus => !sus.IsDead))
+                                statusChild = 1;
+                            else if (true)
+                            {
+                                statusChild = 2;
                             }
                         }
 
-                        GameFiber.Sleep(5100);
-                        EnterAndDismiss(Units[0]);
-                        callactive = false;
+                        //Sombody got Killed. Arresting Suspect
+                        else if (statusChild == 1 || 10 < statusChild && statusChild < 20)
+                        {
+                            if (statusChild == 1)
+                            {
+                                LogTrivial_withAiC($"INFO: A ped has been killed. Arresting the Suspect.");
+                                pursuitWasSelfInitiated = true;
+                                pursuit = LSPDFR_Functions.CreatePursuit();
+                                LSPDFR_Functions.SetPursuitInvestigativeMode(pursuit, true);
+                                LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, false);
+                                foreach (var sus in Suspects.Where(s => !s.IsDead))
+                                {
+                                    LSPDFR_Functions.AddPedToPursuit(pursuit, sus);
+                                }
+                                for (int i = 0; i < Units[0].UnitOfficers.Count; i++)
+                                {
+                                    if (i != 1) LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[i]); // 2.Ofc
+                                }
+                                timeStamp = Game.GameTime;
+                                if (Units[0].UnitOfficers.Count > 1 ? Units[0].UnitOfficers[1] : false) statusChild = 12; else statusChild = 15;
+                            }
+                            else if (statusChild == 12) //only when cop#2 exists
+                            {
+                                if (Units[0].UnitOfficers[1].DistanceTo(Suspects.First(sus => sus.IsDead).Position) > 3f && timeStamp + 20 * 1000 > Game.GameTime)
+                                {
+                                    if (!Helper.IsTaskActive(Units[0].UnitOfficers[1], 35))
+                                        Helper.FollowNavMeshToCoord(Units[0].UnitOfficers[1], Suspects.First(sus => sus.IsDead).Position, 1.4f, 20000, 1.5f, true);
+                                }
+                                else
+                                {
+                                    NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_MEDIC_TEND_TO_DEAD", 12000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                    timeStamp = Game.GameTime;
+                                    statusChild = 13;
+                                }
 
-                        LogTrivial_withAiC($"INFO: Call Finished");
+                            }
+                            else if (statusChild == 13)
+                            {
+                                if (timeStamp + 14 * 1000 < Game.GameTime)
+                                {
+                                    if (pursuit != null ? LSPDFR_Functions.IsPursuitStillRunning(pursuit) : false) 
+                                    {
+                                        LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[1]);
+                                        timeStamp = Game.GameTime;
+                                        statusChild = 15;
+                                    }
+                                    else
+                                    {
+                                        timeStamp = Game.GameTime;
+                                        statusChild = 14;
+                                    }
+                                }
+
+                            }
+                            else if (statusChild == 14)
+                            {
+                                if (Units[0].UnitOfficers[1].DistanceTo(Units[0].PoliceVehicle.RightPosition) > 6f && timeStamp + 20 * 1000 > Game.GameTime)
+                                {
+                                    if (!Helper.IsTaskActive(Units[0].UnitOfficers[1], 35))
+                                    {
+                                        Helper.FollowNavMeshToCoord(Units[0].UnitOfficers[1], Units[0].PoliceVehicle.RightPosition, 1.1f, 8000, 5f, true);
+                                    }
+                                }
+                                else if (Units[0].UnitOfficers[1].DistanceTo(Units[0].PoliceVehicle.RightPosition) < 6f && Units[0].UnitOfficers[1].CurrentVehicle == null && timeStamp + 20 * 1000 > Game.GameTime)
+                                {
+                                    if (!Helper.IsTaskActive(Units[0].UnitOfficers[1], 160))
+                                    {
+                                        Units[0].UnitOfficers[1].Tasks.EnterVehicle(Units[0].PoliceVehicle, 0);
+                                    }
+                                }
+                                else if (timeStamp + 20 * 1000 < Game.GameTime || Units[0].UnitOfficers[1].CurrentVehicle != null)
+                                {
+                                    if (Units[0].UnitOfficers[1].CurrentVehicle == null) Units[0].UnitOfficers[1].Tasks.EnterVehicle(Units[0].PoliceVehicle, 0, EnterVehicleFlags.WarpIn);
+                                    Units[0].PoliceVehicle.IsSirenOn = false;
+                                    timeStamp = Game.GameTime;
+                                    statusChild = 15;
+                                }
+                            } else if (statusChild == 15)
+                            {
+                                if (pursuit != null ? !LSPDFR_Functions.IsPursuitStillRunning(pursuit) : true) {timeStamp = Game.GameTime; callactive = false; }
+                            }
+                        }
+                        else if (statusChild == 2 || 20 < statusChild && statusChild < 30)
+                        {
+                            if (statusChild == 2)
+                            {
+                                NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_MEDIC_TIME_OF_DEATH", 16000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                if (Units[0].UnitOfficers.Count > 1) NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 16000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                foreach (var suspect in Suspects) { if (suspect) Helper.TurnPedToFace(suspect, Units[0].UnitOfficers[0]); }
+                                statusChild = 22;
+                            }
+                            else if (statusChild == 22 && timeStamp + 2 * 1000 < Game.GameTime)
+                            {
+                                foreach (var suspect in Suspects)
+                                {
+                                    if (false) { //suspect) {
+                                        var tasklist = new TaskSequence(suspect);
+                                        tasklist.Tasks.PlayAnimation(new AnimationDictionary(""), "", 1f, AnimationFlags.None);//discuss   
+                                    }
+                                }
+                                statusChild = 23;
+                            }
+                            //maybe an notification when ai ofc are finished with their investigation
+                            else if (statusChild == 23 && timeStamp + 16 * 1000 < Game.GameTime && !Suspects.All(s => isPedNeededToBeWhatched(s)))
+                            {
+                                foreach (var suspect in Suspects)
+                                {
+                                    if (suspect)
+                                    {
+                                        suspect.Tasks.Wander();
+                                        suspect.IsPersistent = false;
+                                        if (!isPedArrestedOrStoppedByAnyPlugin(suspect)) suspect.BlockPermanentEvents = false;
+                                    }
+                                }
+                                EnterAndDismiss(Units[0]);
+
+                                callactive = false;
+                                LogTrivial_withAiC($"INFO: Call Finished");
+                            }
+                        }
                     }
                     //Cops need Backup
                     else if (status == Estate.requestingbackup)
                     {
-                        LogTrivial_withAiC($"INFO: choosed callout path");
-
-                        switch (new Random().Next(0, 5))
+                        if (statusChild == 0)
                         {
-                            case 0:
-                                UnitCallsForBackup("AAIC-OfficerDown");
-                                break;
-                            case 1:
-                                UnitCallsForBackup("AAIC-OfficerInPursuit");
-                                break;
-                            default:
-                                UnitCallsForBackup("AAIC-OfficerRequiringAssistance");
-                                break;
+                            LogTrivial_withAiC($"INFO: choosed callout path");
+
+                            switch (new Random().Next(0, 5))
+                            {
+                                case 0:
+                                    UnitCallsForBackup("AAIC-OfficerDown");
+                                    break;
+                                case 1:
+                                    UnitCallsForBackup("AAIC-OfficerInPursuit");
+                                    break;
+                                default:
+                                    UnitCallsForBackup("AAIC-OfficerRequiringAssistance");
+                                    break;
+                            }
+                            statusChild = 1;
                         }
-                        GameFiber.Sleep(15000);
-                        while (LSPDFR_Functions.IsCalloutRunning()) { GameFiber.Sleep(11000); } //OLD: OfficerRequiringAssistance.finished or OfficerInPursuit.finished
-                        callactive = false;
+                        else if (statusChild == 1 && timeStamp + 15 * 1000 < Game.GameTime)
+                        {
+                            if (LSPDFR_Functions.IsCalloutRunning())                                                        //usually it only checks every 11 Seconds
+                                callactive = false;
+                        }
                     }
 
-                    GameFiber.Sleep(500);
-                }
+                    if (Suspects.All(p => p))
+                    {
+                        if (!startLoosingHealth)
+                        {
+                            foreach (var suspect in Suspects)
+                            {
+                                try { if (suspect.IsAlive) suspect.Health = 200; } catch { }
+                            }
+                        }
 
+                        if (Suspects.Any(s => s.IsDead) && Suspects.Any(s => s.IsAlive))
+                        {
+                            if (Suspects.First(s => !s.IsDead) is var murderer && murderer)
+                            {
+                                if (!isPedArrestedOrStoppedByAnyPlugin(murderer) && !LSPDFR_Functions.IsPedInPursuit(murderer))
+                                {
+                                    if (!Helper.IsTaskActive(murderer, 221))
+                                    {
+                                        Rage.Native.NativeFunction.Natives.xBB9CE077274F6A1B(murderer, MathHelper.ConvertDirectionToHeading(Units[0].PoliceVehicle.Position - murderer.Position) + 180, 0); //Task Wander - Direction is away from police
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    GameFiber.Yield();
+                }
                 return true;
             }
             catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
-                End();
+                AbortCode();
                 return false;
             }
         }
@@ -257,9 +498,8 @@ namespace Fighting
         {
             try
             {
+                Functions.AiCandHA_DismissHelicopter(MO);
                 startLoosingHealth = true;
-                Units[0].PoliceVehicle.IsPersistent = false;
-                foreach (var ofc in Units[0].UnitOfficers) { if (ofc) { ofc.IsPersistent = false; } }
                 foreach (var sus in Suspects) { if (sus) { sus.IsPersistent = false; if (!isPedArrestedOrStoppedByAnyPlugin(sus)) sus.BlockPermanentEvents = false; } }
                 return true;
             }
