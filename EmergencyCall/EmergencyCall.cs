@@ -190,7 +190,7 @@ namespace EmergencyCall
                             while (LSPDFR_Functions.IsPursuitStillRunning(Arrest)) { GameFiber.Sleep(500); } //ToDo: Bad Practice. Blocks the thread. Find a better way to do this.
                             break;
                     }
-
+                    GameFiber.Sleep(800);
                 }
             }
             catch (System.Threading.ThreadAbortException) { if (caller) caller.Delete(); return false; }
