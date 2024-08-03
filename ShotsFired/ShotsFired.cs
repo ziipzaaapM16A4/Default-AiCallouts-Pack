@@ -188,7 +188,7 @@ namespace ShotsFired
                         if (suspectInvalidCounter > 100)    //sleep ist 100 ms also mal 100 = 10 sekunden.
                         {
                             //ToDo: Recreate the Suspect to keep the callout going.
-                            LogTrivial_withAiC("ERROR: in AiCallout object: At Process(): Suspect entity was too long invalid while having them on persistent. Aborting Callout");
+                            LogTrivial_withAiC("ERROR: in AICallout object: At Process(): Suspect entity was too long invalid while having them on persistent. Aborting Callout");
                             CleanUpEntitys();
                             return false;
                         }
@@ -376,7 +376,7 @@ namespace ShotsFired
             catch (System.Threading.ThreadAbortException) { return false; }
             catch (Exception e)
             {
-                LogTrivial_withAiC("ERROR: in AiCallout object: At Process(): " + e);
+                LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
                 return false;
             }
         }
