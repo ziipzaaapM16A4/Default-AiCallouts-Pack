@@ -121,6 +121,7 @@ namespace EmergencyCall
                                     foreach (var ofc in Units[0].UnitOfficers) { Helper.TurnPedToFace(ofc, caller); }
                                     Helper.TurnPedToFace(caller, Units[0].UnitOfficers[0]);
                                     GameFiber.Sleep(2000);
+                                    statusChild = 1;
                                     break;
                                 case 1: //Talking to caller
                                     if (statusChild2 == 0)
@@ -131,24 +132,23 @@ namespace EmergencyCall
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 1;
                                     }
-                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.Any(ofc => Helper.IsTaskActive(ofc, 15)) && timeStamp + 1000 < Game.GameTime : false)
-                                    {
+                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.Any(ofc => Helper.IsTaskActive(ofc, 15)) && timeStamp + 1000 < Game.GameTime : false) {
                                         timeStamp = Game.GameTime;
+                                        statusChild2 = 2;
                                     }
-                                    else if (statusChild2 == 2 ? Units[0].UnitOfficers.Any(ofc => Helper.IsTaskActive(ofc, 118)) && timeStamp + 60000 < Game.GameTime : false)
+                                    else if (statusChild2 == 2 ? Units[0].UnitOfficers.All(ofc => !Helper.IsTaskActive(ofc, 118)) && timeStamp + 25000 < Game.GameTime : false)
                                     {
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 3;
                                     }
                                     else if (statusChild2 == 3)
                                     {
-                                        if (warrantForArrest) { status = Estate.handling; } else { statusChild = 2; statusChild2 = 0; }
+                                        if (warrantForArrest) { status = Estate.handling; } else { statusChild = 2; }
                                     }
                                     break;
                                 case 2: //Releaseing caller
-                                    caller.Tasks.Clear();
-                                    caller.Dismiss();
-                                    if (Units[0].UnitOfficers.Count > 1 && rand.Next(1) == 1) { statusChild = 3; }
+                                    if (caller) { caller.Tasks.Clear(); caller.Dismiss();}
+                                    if (Units[0].UnitOfficers.Count > 1 && rand.Next(1) == 1) { statusChild = 3; statusChild2 = 0;} else { callactive = false; }
                                     break;
                                 case 3:  //Talking to each other (sometimes)
                                     if (statusChild2 == 0)
@@ -158,7 +158,11 @@ namespace EmergencyCall
                                     }
                                     else if (statusChild2 == 1)
                                     {
-                                        if (timeStamp + 1800 < Game.GameTime) { timeStamp = Game.GameTime; statusChild2 = 2; }
+                                        if (timeStamp + 1800 < Game.GameTime) 
+                                        {   
+                                            timeStamp = Game.GameTime; 
+                                            statusChild2 = 2; 
+                                        }
                                     }
                                     else if (statusChild2 == 2)
                                     {
@@ -169,7 +173,11 @@ namespace EmergencyCall
                                     }
                                     else if (statusChild2 == 3)
                                     {
-                                        if (timeStamp + 3000 < Game.GameTime) { timeStamp = Game.GameTime; statusChild2 = 4; }
+                                        if (timeStamp + 3000 < Game.GameTime) 
+                                        { 
+                                            timeStamp = Game.GameTime; 
+                                            statusChild2 = 4; 
+                                        }
                                     }
                                     else if (statusChild2 == 4)
                                     {
@@ -178,11 +186,18 @@ namespace EmergencyCall
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 5;
                                     }
-                                    else if (statusChild2 == 5) { if (timeStamp + 10000 < Game.GameTime) { timeStamp = Game.GameTime; callactive = false; } }
+                                    else if (statusChild2 == 5) { 
+                                        if (timeStamp + 10000 < Game.GameTime) 
+                                        { 
+                                            timeStamp = Game.GameTime; 
+                                            callactive = false; 
+                                        } 
+                                    }
                                     break;
-                                }
-                                break;
+                            }
+                            break;
                         case Estate.handling: //if caller is suspect, then arrest him
+                            pursuitWasSelfInitiated = true;
                             var Arrest = LSPDFR_Functions.CreatePursuit();
                             LSPDFR_Functions.SetPursuitInvestigativeMode(Arrest, true);
                             foreach (var ofc in Units[0].UnitOfficers) LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
