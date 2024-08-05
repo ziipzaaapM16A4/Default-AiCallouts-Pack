@@ -137,11 +137,7 @@ namespace EmergencyCall
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 1;
                                     }
-                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.Any(IsDoingNothing) && timeStamp + 1000 < Game.GameTime : false) {
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 2;
-                                    }
-                                    else if (statusChild2 == 2 ? Units[0].UnitOfficers.All(IsDoingScriptedTask) && timeStamp + 25000 < Game.GameTime : false)
+                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.All(IsDoingScriptedTask) || timeStamp + 25000 < Game.GameTime : false) //I'm anyways not forcing the animation. then why redundantly, do stuf like waiting
                                     {
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 3;
