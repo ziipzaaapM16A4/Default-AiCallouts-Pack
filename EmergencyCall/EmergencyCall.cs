@@ -72,7 +72,12 @@ namespace EmergencyCall
                 uint timeStamp = Game.GameTime;
                 Estate status = Estate.driving;
                 int statusChild = 0;
-                int statusChild2 = 0;
+                int statusChild2 = 0;                                                           
+                                                                                                //      delegate typs
+                                                                                                //Action has no return value
+                Func<Ped, bool> IsDoingNothing = (ofc) => Helper.IsTaskActive(ofc, 15);         //Func has a variable return value
+                Func<Ped, bool> IsDoingScriptedTask = (ofc) => Helper.IsTaskActive(ofc, 118);   //Predicate has a bool return value
+                                                                                                //Eventhandler no retun value but as parameter can the Event can be given back
 
                 LHandle pursuit;
                 bool pursuitWasSelfInitiated = false;
@@ -132,11 +137,11 @@ namespace EmergencyCall
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 1;
                                     }
-                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.Any(ofc => Helper.IsTaskActive(ofc, 15)) && timeStamp + 1000 < Game.GameTime : false) {
+                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.Any(IsDoingNothing) && timeStamp + 1000 < Game.GameTime : false) {
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 2;
                                     }
-                                    else if (statusChild2 == 2 ? Units[0].UnitOfficers.All(ofc => !Helper.IsTaskActive(ofc, 118)) && timeStamp + 25000 < Game.GameTime : false)
+                                    else if (statusChild2 == 2 ? Units[0].UnitOfficers.All(IsDoingScriptedTask) && timeStamp + 25000 < Game.GameTime : false)
                                     {
                                         timeStamp = Game.GameTime;
                                         statusChild2 = 3;
