@@ -225,7 +225,7 @@ namespace ShotsFired
                         //Plyer reporting or able to report
                         if (!aiSpottedSuspect && playerSpottedSuspect && acr_active)
                         {
-                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you see the suspect, \nreport its position by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalKey()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
+                            if (tickcounter % 100 == 0) Game.DisplayHelp($"If you see the suspect, \nreport its position by holding ~{ACTION_CRIME_REPORT_key.GetInstructionalId()}~", 10000); //10 sekunden warten //ToDo: Show current input device as help info (controler or keys)
                             if (ACTION_CRIME_REPORT_pressed())
                             {
                                 progressbar.Percentage += 0.05f;  //2 sec = 20 ticks. 100 / 20 = 5; Proof: 5f * 20 ticks(oder 2 sek) = 100%
