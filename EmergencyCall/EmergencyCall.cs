@@ -175,7 +175,7 @@ namespace EmergencyCall
                                     break;
                                 case 2: //Releaseing caller
                                     if (caller) { caller.Tasks.Clear(); caller.Dismiss(); }
-                                    if (Units[0].UnitOfficers.Count > 1 && rand.Next(1) == 1) { statusChild = 3; statusChild2 = 0; }
+                                    if (Units[0].UnitOfficers.Count > 1 && rand.Next(2) == 1) { statusChild = 3; statusChild2 = 0; }
                                     else { callactive = false; }
                                     break;
                                 case 3:  //Talking to each other (sometimes)
