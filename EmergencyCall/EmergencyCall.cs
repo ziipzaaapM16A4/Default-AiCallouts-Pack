@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,15 +19,14 @@ namespace EmergencyCall
         private bool warrantForArrest;
         private Rage.Object notepad = null;
         private Random rand = new Random();
-        private enum Estate { driving, parking, approaching, investigation, handling, pursuit};
-        
-        public override bool Setup()
-        {
-            try
-            {
+        private enum Estate { driving, parking, approaching, investigation, handling, pursuit };
+
+        public override bool Setup() {
+            try {
                 SceneInfo = "Civilian in need of assistance";
                 CalloutDetailsString = "CIV_ASSISTANCE";
-                if (rand.Next(0, 2) == 0) { ResponseType = EResponseType.Code3; } else { ResponseType = EResponseType.Code2; }
+                if (rand.Next(0, 2) == 0) { ResponseType = EResponseType.Code3; }
+                else { ResponseType = EResponseType.Code2; }
 
                 Vector3 roadside = new Vector3();
                 Vector3 streetDirection = new Vector3();
@@ -40,7 +39,7 @@ namespace EmergencyCall
                     NativeFunction.Natives.xB61C8E878A4199CA<bool>(roadside, demandPavement, out roadside, 16); //GET_SAFE_COORD_FOR_PED
                     Location = roadside;
 
-                    if (Functions.IsLocationAcceptedBySystem(Location))
+                    if (Functions.IsLocationAcceptedBySystem(Location) && Location != new Vector3(0,0,0))
                         posFound = true;
 
                     trys++;
@@ -56,44 +55,37 @@ namespace EmergencyCall
                 caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
 
                 return true;
-            }
-            catch (System.Threading.ThreadAbortException) { return false; }
-            catch (Exception e)
-            {
+            } catch (System.Threading.ThreadAbortException) { return false; } catch (Exception e) {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
                 return false;
             }
         }
-        public override bool Process()
-        {
-            try
-            {
+        public override bool Process() {
+            try {
                 bool callactive = true;
                 uint timeStamp = Game.GameTime;
                 Estate status = Estate.driving;
                 int statusChild = 0;
-                int statusChild2 = 0;                                                           
-                                                                                                //      delegate typs
-                                                                                                //Action has no return value
+                int statusChild2 = 0;
+                //      delegate typs
+                //Action has no return value
                 Func<Ped, bool> IsDoingNothing = (ofc) => Helper.IsTaskActive(ofc, 15);         //Func has a variable return value
-                Func<Ped, bool> IsDoingScriptedTask = (ofc) => Helper.IsTaskActive(ofc, 118);   //Predicate has a bool return value
+                Func<Ped, bool> IsDoingUseScenarioTask = (ofc) => Helper.IsTaskActive(ofc, 118);   //Predicate has a bool return value
+                Func<Ped, bool> IsDoingScriptedTask = (ofc) => Helper.IsTaskActive(ofc, 134);
                                                                                                 //Eventhandler no retun value but as parameter can the Event can be given back
 
                 LHandle pursuit;
                 bool pursuitWasSelfInitiated = false;
 
-                while (callactive)
-                {
+                while (callactive) {
 
                     //Pursuit - Any suspect in pursuit? -->> hunt felon
-                    if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null && Suspects.Any(s => (s ? LSPDFR_Functions.IsPedInPursuit(s) : false)) && !pursuitWasSelfInitiated)
-                    {
+                    if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null && Suspects.Any(s => (s ? LSPDFR_Functions.IsPedInPursuit(s) : false)) && !pursuitWasSelfInitiated) {
                         status = Estate.pursuit;
-                    } 
+                    }
 
 
-                    switch (status)
-                    {
+                    switch (status) {
                         case Estate.pursuit:
                             LogTrivial_withAiC("Investigation turned into a Chase. Starting Pursuit");
                             Units[0].PoliceVehicle.TopSpeed = 45f;
@@ -129,74 +121,99 @@ namespace EmergencyCall
                                     statusChild = 1;
                                     break;
                                 case 1: //Talking to caller
-                                    if (statusChild2 == 0)
-                                    {
-                                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_MEDIC_TIME_OF_DEATH", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
-                                        if (Units[0].UnitOfficers.Count > 1) NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
-                                        var callerAnimation = caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 1;
-                                    }
-                                    else if (statusChild2 == 1 ? Units[0].UnitOfficers.Any(IsDoingNothing) && timeStamp + 1000 < Game.GameTime : false) {
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 2;
-                                    }
-                                    else if (statusChild2 == 2 ? Units[0].UnitOfficers.All(IsDoingScriptedTask) && timeStamp + 25000 < Game.GameTime : false)
-                                    {
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 3;
-                                    }
-                                    else if (statusChild2 == 3)
-                                    {
-                                        if (warrantForArrest) { status = Estate.handling; } else { statusChild = 2; }
+                                    switch (statusChild2) {
+                                        case 0:
+                                            NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_MEDIC_TIME_OF_DEATH", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                            if (Units[0].UnitOfficers.Count > 1)
+                                                NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                            caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
+                                            timeStamp = Game.GameTime;
+                                            statusChild2 = 1;
+                                            break;
+                                        case 1:
+                                            if (timeStamp + 45000 > Game.GameTime) { //ReTask if not Tasked
+                                                if (!Helper.IsTaskActive(Units[0].UnitOfficers[0], 118)) {
+                                                    NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "CODE_HUMAN_MEDIC_TIME_OF_DEATH", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                                }
+                                                if (Units[0].UnitOfficers.Count > 1) {
+                                                    if (!Helper.IsTaskActive(Units[0].UnitOfficers[1], 118)) {
+                                                        NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "CODE_HUMAN_POLICE_INVESTIGATE", 40000, true);  //TASK_START_SCENARIO_IN_PLACE
+                                                    }
+                                                }
+                                                if (!Helper.IsTaskActive(caller, 134)) {
+                                                    caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
+                                                }
+                                            } else {  //Exit Task
+                                                if (Helper.IsTaskActive(Units[0].UnitOfficers[0], 118)) {
+                                                    Units[0].UnitOfficers[0].Tasks.Clear();
+                                                }
+                                                if (Units[0].UnitOfficers.Count > 1) {
+                                                    if (Helper.IsTaskActive(Units[0].UnitOfficers[1], 118)) {
+                                                        Units[0].UnitOfficers[1].Tasks.Clear();
+                                                    }
+                                                }
+                                                timeStamp = Game.GameTime;
+                                                statusChild2 = 2;
+                                            }
+                                            break;
+                                        case 2:
+                                            if (!Units[0].UnitOfficers.Any(IsDoingUseScenarioTask)) { //if no cop is still doing scenario stuff
+                                                timeStamp = Game.GameTime;
+                                                statusChild2 = 3;
+                                            }
+                                            break;
+                                        case 3:
+                                            if (warrantForArrest) {
+                                                status = Estate.handling;
+                                            }
+                                            else {
+                                                statusChild = 2;
+                                            }
+                                            break;
+
                                     }
                                     break;
                                 case 2: //Releaseing caller
-                                    if (caller) { caller.Tasks.Clear(); caller.Dismiss();}
-                                    if (Units[0].UnitOfficers.Count > 1 && rand.Next(1) == 1) { statusChild = 3; statusChild2 = 0;} else { callactive = false; }
+                                    if (caller) { caller.Tasks.Clear(); caller.Dismiss(); }
+                                    if (Units[0].UnitOfficers.Count > 1 && rand.Next(1) == 1) { statusChild = 3; statusChild2 = 0; }
+                                    else { callactive = false; }
                                     break;
                                 case 3:  //Talking to each other (sometimes)
-                                    if (statusChild2 == 0)
-                                    {
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 1;
-                                    }
-                                    else if (statusChild2 == 1)
-                                    {
-                                        if (timeStamp + 1800 < Game.GameTime) 
-                                        {   
-                                            timeStamp = Game.GameTime; 
-                                            statusChild2 = 2; 
-                                        }
-                                    }
-                                    else if (statusChild2 == 2)
-                                    {
-                                        Helper.TurnPedToFace(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1]);
-                                        Helper.TurnPedToFace(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0]);
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 3;
-                                    }
-                                    else if (statusChild2 == 3)
-                                    {
-                                        if (timeStamp + 3000 < Game.GameTime) 
-                                        { 
-                                            timeStamp = Game.GameTime; 
-                                            statusChild2 = 4; 
-                                        }
-                                    }
-                                    else if (statusChild2 == 4)
-                                    {
-                                        Rage.Native.NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "WORLD_HUMAN_HANG_OUT_STREET", 10000, true); //TASK_START_SCENARIO_IN_PLACE
-                                        Rage.Native.NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "WORLD_HUMAN_HANG_OUT_STREET", 10000, true); //TASK_START_SCENARIO_IN_PLACE
-                                        timeStamp = Game.GameTime;
-                                        statusChild2 = 5;
-                                    }
-                                    else if (statusChild2 == 5) { 
-                                        if (timeStamp + 10000 < Game.GameTime) 
-                                        { 
-                                            timeStamp = Game.GameTime; 
-                                            callactive = false; 
-                                        } 
+                                    switch (statusChild2) {
+                                        case 0:
+                                            timeStamp = Game.GameTime;
+                                            statusChild2 = 1;
+                                            break;
+                                        case 1:
+                                            if (timeStamp + 1800 < Game.GameTime) {
+                                                timeStamp = Game.GameTime;
+                                                statusChild2 = 2;
+                                            }
+                                            break;
+                                        case 2:
+                                            Helper.TurnPedToFace(Units[0].UnitOfficers[0], Units[0].UnitOfficers[1]);
+                                            Helper.TurnPedToFace(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0]);
+                                            timeStamp = Game.GameTime;
+                                            statusChild2 = 3;
+                                            break;
+                                        case 3:
+                                            if (timeStamp + 3000 < Game.GameTime) {
+                                                timeStamp = Game.GameTime;
+                                                statusChild2 = 4;
+                                            }
+                                            break;
+                                        case 4:
+                                            Rage.Native.NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[0], "WORLD_HUMAN_HANG_OUT_STREET", 10000, true); //TASK_START_SCENARIO_IN_PLACE
+                                            Rage.Native.NativeFunction.Natives.x142A02425FF02BD9(Units[0].UnitOfficers[1], "WORLD_HUMAN_HANG_OUT_STREET", 10000, true); //TASK_START_SCENARIO_IN_PLACE
+                                            timeStamp = Game.GameTime;
+                                            statusChild2 = 5;
+                                            break;
+                                        case 5:
+                                            if (timeStamp + 10000 < Game.GameTime) {
+                                                timeStamp = Game.GameTime;
+                                                callactive = false;
+                                            }
+                                            break;
                                     }
                                     break;
                             }
@@ -205,18 +222,17 @@ namespace EmergencyCall
                             pursuitWasSelfInitiated = true;
                             var Arrest = LSPDFR_Functions.CreatePursuit();
                             LSPDFR_Functions.SetPursuitInvestigativeMode(Arrest, true);
-                            foreach (var ofc in Units[0].UnitOfficers) LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
-                            LSPDFR_Functions.AddPedToPursuit(Arrest, caller);
+                            foreach (var ofc in Units[0].UnitOfficers)
+                                if (ofc) LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
+                            if (caller) LSPDFR_Functions.AddPedToPursuit(Arrest, caller);
                             while (LSPDFR_Functions.IsPursuitStillRunning(Arrest)) { GameFiber.Sleep(500); } //ToDo: Bad Practice. Blocks the thread. Find a better way to do this.
                             break;
                     }
                     GameFiber.Sleep(800);
                 }
-            }
-            catch (System.Threading.ThreadAbortException) { if (caller) caller.Delete(); return false; }
-            catch (Exception e)
-            {
-                if (caller) caller.Delete();
+            } catch (System.Threading.ThreadAbortException) { if (caller) caller.Delete(); return false; } catch (Exception e) {
+                if (caller)
+                    caller.Delete();
                 LogTrivial_withAiC("ERROR: in AICallout object: At Process(): " + e);
                 AbortCode();
                 return false;
@@ -224,8 +240,7 @@ namespace EmergencyCall
             return true;
         }
 
-        private void OfficersArrive()
-        {
+        private void OfficersArrive() {
             GameFiber.WaitWhile(() => Units[0].PoliceVehicle.Position.DistanceTo(Location) >= 40f, 25000);
             Units[0].PoliceVehicle.IsSirenSilent = true;
             Units[0].PoliceVehicle.TopSpeed = 12f;
@@ -237,17 +252,13 @@ namespace EmergencyCall
             OfficersLeaveVehicle(Units[0], false);
         }
 
-        public override bool End()
-        {
-            try
-            {
-                if (caller) caller.IsPersistent = false;
+        public override bool End() {
+            try {
+                if (caller)
+                    caller.IsPersistent = false;
                 EnterAndDismiss(Units[0]);
                 return true;
-            }
-            catch (System.Threading.ThreadAbortException) { return false; }
-            catch (Exception e)
-            {
+            } catch (System.Threading.ThreadAbortException) { return false; } catch (Exception e) {
                 LogTrivial_withAiC("ERROR: in AICallout object: At End(): " + e);
                 return false;
             }
