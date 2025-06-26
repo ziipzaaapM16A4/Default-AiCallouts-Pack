@@ -1,4 +1,4 @@
-[AmbientAICallouts](https://www.lcpdfr.com/downloads/gta5mods/scripts/28954-ambientaicallouts/)
+Callouts included in [AmbientAICallouts](https://www.lcpdfr.com/downloads/gta5mods/scripts/28954-ambientaicallouts/) by default
 =
 
 Every folder represents a C# callout project.
