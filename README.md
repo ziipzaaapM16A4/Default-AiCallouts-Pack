@@ -1,7 +1,7 @@
-Default AiCallouts Pack
+Callouts included in [AmbientAICallouts](https://www.lcpdfr.com/downloads/gta5mods/scripts/28954-ambientaicallouts/) by default
 =
 
-Every folder represents a C# AiCallout Project
+Every folder represents a C# callout project.
 
 You can modify them, use them for your code, and send me pull requests. 
-Since writing AiCallouts is not my main goal I'm not actively working on them except when you send me pull requests.
+Since writing AmbientAICallouts is not my main goal, I'm not actively working on them except when you send me pull requests.
