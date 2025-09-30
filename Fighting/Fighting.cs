@@ -17,6 +17,9 @@ namespace Fighting
     {
         private Version stpVersion = new Version("4.9.4.7");
         private bool isSTPRunning = false;
+        private bool isPRRunning = false;
+        private Version prVersion = new Version("1.0.0.1");
+
         bool startLoosingHealth = false;
         enum Estate { driving, parking, approaching, investigation, handling, requestingbackup };
 
@@ -29,6 +32,8 @@ namespace Fighting
                 CalloutDetailsString = "CRIME_ASSAULT";
 
                 if (Helper.IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
+                if (Helper.IsExternalPluginRunning("Policing Redefined", prVersion)) isPRRunning = true;
+                
                 Vector3 proposedPosition = Game.LocalPlayer.Character.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 15f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 15f);
                 bool posFound = false;
                 int trys = 0;
@@ -519,24 +524,51 @@ namespace Fighting
             return false;
         }
 
-        private bool isPedArrestedOrStoppedByAnyPlugin(Ped ped) {return LSPDFR_Functions.IsPedArrested(ped) || LSPDFR_Functions.IsPedGettingArrested(ped) || isPedStoppedByAnyPlugin(ped);}
+        private bool isPedArrestedOrStoppedByAnyPlugin(Ped ped) {
+            return LSPDFR_Functions.IsPedArrested(ped) || LSPDFR_Functions.IsPedGettingArrested(ped) || isPedStoppedByAnyPlugin(ped);
+        }
 
-        private bool isPedStoppedByAnyPlugin(Ped ped) {return LSPDFR_Functions.IsPedStoppedByPlayer(ped) || (isSTPRunning ? STPPluginSupport.isPedStoppedBySTP(ped) : false);}
+        private bool isPedStoppedByAnyPlugin(Ped ped) {
+            return LSPDFR_Functions.IsPedStoppedByPlayer(ped) || 
+                (isSTPRunning ? STPPluginSupport.isPedStoppedBySTP(ped) : false) || 
+                (isPRRunning ? PRPluginSupport.isPedStoppedByPR(ped) : false);
+        }
     }
 
     //STP
     internal class STPPluginSupport
     {
-        internal static bool isPedGrabbedBySTP(Ped ped)
-        {
-            if (StopThePed.API.Functions.isPedGrabbed(ped)) return true; else return false;
+        internal static bool isPedGrabbedBySTP(Ped ped) {
+            if (StopThePed.API.Functions.isPedGrabbed(ped))
+                return true;
+            else
+                return false;
         }
 
-        internal static bool isPedStoppedBySTP(Ped ped)
-        {
-            if (StopThePed.API.Functions.isPedStopped(ped)) return true; else return false;
+        internal static bool isPedStoppedBySTP(Ped ped) {
+            if (StopThePed.API.Functions.isPedStopped(ped))
+                return true;
+            else
+                return false;
         }
 
         //Arrested apparently does not exist. STP probably uses LSPDFR to indicate arrested status
+    }
+    
+    //PR
+    internal class PRPluginSupport {
+        internal static bool isPedGrabbedByPR(Ped ped) {
+            if (PolicingRedefined.API.PedAPI.IsPedGrabbed(ped))
+                return true;
+            else
+                return false;
+        }
+
+        internal static bool isPedStoppedByPR(Ped ped) {
+            if (PolicingRedefined.API.PedAPI.IsPedStopped(ped))
+                return true;
+            else
+                return false;
+        }
     }
 }
