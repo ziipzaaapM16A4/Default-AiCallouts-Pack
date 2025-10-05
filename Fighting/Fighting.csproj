@@ -58,6 +58,9 @@
     <Reference Include="LSPD First Response">
       <HintPath>..\..\..\SDK\LSPD First Response.dll</HintPath>
     </Reference>
+    <Reference Include="PolicingRedefined">
+      <HintPath>..\..\..\SDK\PolicingRedefined.dll</HintPath>
+    </Reference>
     <Reference Include="RagePluginHookSDK">
       <HintPath>..\..\..\SDK\RagePluginHookSDK.dll</HintPath>
     </Reference>

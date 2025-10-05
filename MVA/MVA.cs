@@ -1,19 +1,23 @@
+using AmbientAICallouts.API;
+using LSPD_First_Response.Mod.API;
+using PolicingRedefined.API;
+using PolicingRedefined.Interaction.Assets;
+using Rage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Rage;
 using System.Reflection;
-using LSPD_First_Response.Mod.API;
+using Functions = AmbientAICallouts.API.Functions;
 using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
 using NativeFunction = Rage.Native.NativeFunction;
-using AmbientAICallouts.API;
-using Functions = AmbientAICallouts.API.Functions;
 
 namespace MVA
 {
     public class MVA : AiCallout
     {
         internal readonly List<Model> carModelList = new List<Model> { "SEMINOLE", "SCHAFTER2", "PRIMO", "BALLER2", "MINIVAN", "EXEMPLAR", "TAXI", "WARRENER", "ORACLE", "HABANERO","SABREGT"};
+        internal bool suspectFirskedByThirdPartyPlugin = false;
+        internal bool suspectArrestedByThirdPartyPlugin = false;
         private Rage.Object notepad = null;
         private float heading;
         private bool finished = false;
@@ -21,8 +25,9 @@ namespace MVA
         private static Random randomizer = new Random();
         private Version stpVersion = new Version("4.9.4.7");
         private bool isSTPRunning = false;
-        internal bool suspectFirskedOverSTP = false;
-        internal bool suspectArrestedOverSTP = false;
+        private Version prVersion = new Version("1.0.0.1");
+        private bool isPRRunning = false;
+
 
         public override bool Setup()
         {
@@ -30,7 +35,8 @@ namespace MVA
             {
                 SceneInfo = "Motor Vehicle Accident";
                 CalloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
-                if (IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
+                if (IsExternalPluginRunning("Policing Redefined", stpVersion)) isSTPRunning = true;
+                else if (IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
                 Vector3 roadside = new Vector3();
                 bool posFound = false;
                 int trys = 0;
@@ -836,24 +842,25 @@ namespace MVA
         private void Suspect2Flees()
         {
             LogTrivialDebug_withAiC(" DEBUG: Suspect2Flees() entered");
-            if (isSTPRunning) ExternalPluginSupport.logInEvents(this);          //Stp Support
+            if (isSTPRunning) ExternalPluginSupport.logInSTPEvents(this);          //Stp Support
+            if (isPRRunning) ExternalPluginSupport.logInPREvents(this);
             LSPDFR_Functions.AddPedContraband(Suspects[1], LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
 
             int i = 0;
-            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedOverSTP && i < 2 * 60/*sekunden*/   )
+            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedByThirdPartyPlugin && i < 2 * 60/*sekunden*/   )
             {
                 i++;
                 GameFiber.Sleep(500);
             }
 
-            if (LSPDFR_Functions.IsPedArrested(Suspects[1]) || suspectArrestedOverSTP)
+            if (LSPDFR_Functions.IsPedArrested(Suspects[1]) || suspectArrestedByThirdPartyPlugin)
             {
                 Game.DisplaySubtitle("~b~Officer~w~: Great. " + (Units[0].UnitOfficers.Count == 1 ? "I" : "We") + " finished here too. Thanks for the Backup", 6000);
             }
             else
             {
                 if (i >= 2 * 60) { Game.DisplaySubtitle("~b~Officer~w~: Would you PLEASE frisk your suspect! We can't stay here all day.", 6000); }
-                while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedOverSTP)  { GameFiber.Sleep(500); }
+                while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedByThirdPartyPlugin)  { GameFiber.Sleep(500); }
                 LHandle pursuit = LSPDFR_Functions.CreatePursuit();
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[1]);
                 GameFiber.Sleep(1800);
@@ -862,7 +869,8 @@ namespace MVA
                 Functions.AiCandHA_AddHelicopterToPursuit(MO, pursuit);
                 GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
             }
-            if (isSTPRunning) try { ExternalPluginSupport.logOutEvents(this); } catch { }          //Stp Support
+            if (isSTPRunning) try { ExternalPluginSupport.logOutSTPEvents(this); } catch { }          //Stp Support
+            if (isPRRunning) try { ExternalPluginSupport.logOutPREvents(this); } catch { }          //Stp Support
         }
 
         private void EndOfPursuit()
@@ -870,9 +878,9 @@ namespace MVA
             LogTrivialDebug_withAiC(" DEBUG: EndOfPursuit() entered");
             GameFiber.Sleep(3000);
             List<bool> anySuspectGrabbed = new List<bool> { false, false };
-            if (ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[0]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]))
+            if (ExternalPluginSupport.isPedBeeingGrabbedByRP(Suspects[0]) || ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[0]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]))
                 anySuspectGrabbed[0] = true;
-            if (ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[1]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[1]))
+            if (ExternalPluginSupport.isPedBeeingGrabbedByRP(Suspects[1]) || ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[1]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[1]))
                 anySuspectGrabbed[1] = true;
 
             //----------------------------------------------------needs more code to detect which suspect is free for entering its own vehicle
@@ -961,8 +969,11 @@ namespace MVA
         {
             if (ped == Suspects[1])
             {
-                suspectFirskedOverSTP = true;
-                StopThePed.API.Functions.injectPedSearchItems(Suspects[1]);
+                suspectFirskedByThirdPartyPlugin = true;
+                if (isPRRunning)
+                    PolicingRedefined.API.SearchItemsAPI.AddCustomPedSearchItem(new SearchItem("Gun", Suspects[1]));
+                else if (isSTPRunning)
+                    StopThePed.API.Functions.injectPedSearchItems(Suspects[1]);
             }
         }
 
@@ -970,7 +981,15 @@ namespace MVA
         {
             if (ped == Suspects[1])
             {
-                suspectArrestedOverSTP = true;
+                suspectArrestedByThirdPartyPlugin = true;
+            }
+        }
+
+        internal void Events_pedArrestedEvent(Ped ped, Ped officer, bool frontCuffs)
+        {
+            if (ped == Suspects[1])
+            {
+                suspectArrestedByThirdPartyPlugin = true;
             }
         }
     }
@@ -978,21 +997,39 @@ namespace MVA
     internal class ExternalPluginSupport
     {
         //STP
-        internal static bool isPedBeeingGrabbedBySTP(Ped ped)
-        {
-            if (StopThePed.API.Functions.isPedGrabbed(ped)) return true; else return false;
+        internal static bool isPedBeeingGrabbedBySTP(Ped ped) {
+            if (StopThePed.API.Functions.isPedGrabbed(ped))
+                return true;
+            else
+                return false;
         }
 
-        internal static void logInEvents(MVA mva)
-        {
+        internal static void logInSTPEvents(MVA mva) {
             StopThePed.API.Events.patDownPedEvent += mva.Events_patDownPedEvent;
             StopThePed.API.Events.pedArrestedEvent += mva.Events_pedArrestedEvent;
         }
 
-        internal static void logOutEvents(MVA mva)
-        {
+        internal static void logOutSTPEvents(MVA mva) {
             StopThePed.API.Events.patDownPedEvent -= mva.Events_patDownPedEvent;
             StopThePed.API.Events.pedArrestedEvent -= mva.Events_pedArrestedEvent;
+        }
+
+        //PR
+        internal static bool isPedBeeingGrabbedByRP(Ped ped) {
+            if (PolicingRedefined.API.PedAPI.IsPedGrabbed(ped))
+                return false;
+            else
+                return true;
+        }
+
+        internal static void logInPREvents(MVA mva) {
+            PolicingRedefined.API.EventsAPI.OnPedPatDown += mva.Events_patDownPedEvent;
+            PolicingRedefined.API.EventsAPI.OnPedArrested += mva.Events_pedArrestedEvent;
+        }
+
+        internal static void logOutPREvents(MVA mva) {
+            PolicingRedefined.API.EventsAPI.OnPedPatDown -= mva.Events_patDownPedEvent;
+            PolicingRedefined.API.EventsAPI.OnPedArrested -= mva.Events_pedArrestedEvent;
         }
     }
 }
