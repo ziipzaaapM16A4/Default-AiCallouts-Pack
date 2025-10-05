@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{53F61632-BC04-4E38-ADA4-D69AAA406678}</ProjectGuid>
+    <ProjectGuid>{E6A81655-B801-4AC8-8F58-E080A5CBD323}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PrankCall</RootNamespace>
-    <AssemblyName>PrankCall</AssemblyName>
+    <RootNamespace>ArrestWarrant</RootNamespace>
+    <AssemblyName>ArrestWarrant</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -52,11 +52,11 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AmbientAICallouts">
+    <Reference Include="AmbientAICallouts, Version=0.9.5.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AmbientAICallouts\bin\x64\Debug\AmbientAICallouts.dll</HintPath>
     </Reference>
-    <Reference Include="LSPD First Response, Version=0.4.8037.37597, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="LSPD First Response">
       <HintPath>..\..\..\SDK\LSPD First Response.dll</HintPath>
     </Reference>
     <Reference Include="RagePluginHookSDK">
@@ -72,7 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PrankCall.cs" />
+    <Compile Include="ArrestWarrant.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
