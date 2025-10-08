@@ -17,8 +17,8 @@ namespace Fighting
     {
         private Version stpVersion = new Version("4.9.4.7");
         private bool isSTPRunning = false;
-        private bool isPRRunning = false;
         private Version prVersion = new Version("1.0.0.1");
+        private bool isPRRunning = false;
 
         bool startLoosingHealth = false;
         enum Estate { driving, parking, approaching, investigation, handling, requestingbackup };
@@ -31,8 +31,8 @@ namespace Fighting
                 arrivalDistanceThreshold = 14f;
                 CalloutDetailsString = "CRIME_ASSAULT";
 
-                if (Helper.IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
                 if (Helper.IsExternalPluginRunning("Policing Redefined", prVersion)) isPRRunning = true;
+                else if (Helper.IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
                 
                 Vector3 proposedPosition = Game.LocalPlayer.Character.Position.Around2D(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 15f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 15f);
                 bool posFound = false;
@@ -566,6 +566,13 @@ namespace Fighting
 
         internal static bool isPedStoppedByPR(Ped ped) {
             if (PolicingRedefined.API.PedAPI.IsPedStopped(ped))
+                return true;
+            else
+                return false;
+        }
+
+        internal static bool isPedArrestedbyPR(Ped ped) {
+            if (PolicingRedefined.API.PedAPI.IsPedArrested(ped))
                 return true;
             else
                 return false;

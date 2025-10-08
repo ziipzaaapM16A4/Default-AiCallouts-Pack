@@ -35,7 +35,7 @@ namespace MVA
             {
                 SceneInfo = "Motor Vehicle Accident";
                 CalloutDetailsString = "MOTOR_VEHICLE_ACCIDENT";
-                if (IsExternalPluginRunning("Policing Redefined", stpVersion)) isSTPRunning = true;
+                if (IsExternalPluginRunning("Policing Redefined", prVersion)) isPRRunning = true;
                 else if (IsExternalPluginRunning("StopThePed", stpVersion)) isSTPRunning = true;
                 Vector3 roadside = new Vector3();
                 bool posFound = false;
@@ -878,9 +878,9 @@ namespace MVA
             LogTrivialDebug_withAiC(" DEBUG: EndOfPursuit() entered");
             GameFiber.Sleep(3000);
             List<bool> anySuspectGrabbed = new List<bool> { false, false };
-            if (ExternalPluginSupport.isPedBeeingGrabbedByRP(Suspects[0]) || ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[0]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]))
+            if (PRPluginSupport.isPedBeeingGrabbedByRP(Suspects[0]) || STPPluginSupport.isPedBeeingGrabbedBySTP(Suspects[0]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]))
                 anySuspectGrabbed[0] = true;
-            if (ExternalPluginSupport.isPedBeeingGrabbedByRP(Suspects[1]) || ExternalPluginSupport.isPedBeeingGrabbedBySTP(Suspects[1]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[1]))
+            if (PRPluginSupport.isPedBeeingGrabbedByRP(Suspects[1]) || STPPluginSupport.isPedBeeingGrabbedBySTP(Suspects[1]) || LSPDFR_Functions.IsPedBeingGrabbed(Suspects[1]))
                 anySuspectGrabbed[1] = true;
 
             //----------------------------------------------------needs more code to detect which suspect is free for entering its own vehicle
@@ -971,9 +971,9 @@ namespace MVA
             {
                 suspectFirskedByThirdPartyPlugin = true;
                 if (isPRRunning)
-                    PolicingRedefined.API.SearchItemsAPI.AddCustomPedSearchItem(new SearchItem("Gun", Suspects[1]));
+                    PRPluginSupport.AddCustomPedSearchItem(ped);
                 else if (isSTPRunning)
-                    StopThePed.API.Functions.injectPedSearchItems(Suspects[1]);
+                    STPPluginSupport.AddCustomPedSearchItem(ped);
             }
         }
 
@@ -994,9 +994,9 @@ namespace MVA
         }
     }
 
-    internal class ExternalPluginSupport
+    //STP
+    internal class STPPluginSupport
     {
-        //STP
         internal static bool isPedBeeingGrabbedBySTP(Ped ped) {
             if (StopThePed.API.Functions.isPedGrabbed(ped))
                 return true;
@@ -1014,7 +1014,14 @@ namespace MVA
             StopThePed.API.Events.pedArrestedEvent -= mva.Events_pedArrestedEvent;
         }
 
-        //PR
+        internal static void AddCustomPedSearchItem(Ped ped) {
+            StopThePed.API.Functions.injectPedSearchItems(ped);
+        }
+    }
+
+    //PR
+    internal class PRPluginSupport
+    {
         internal static bool isPedBeeingGrabbedByRP(Ped ped) {
             if (PolicingRedefined.API.PedAPI.IsPedGrabbed(ped))
                 return false;
@@ -1030,6 +1037,10 @@ namespace MVA
         internal static void logOutPREvents(MVA mva) {
             PolicingRedefined.API.EventsAPI.OnPedPatDown -= mva.Events_patDownPedEvent;
             PolicingRedefined.API.EventsAPI.OnPedArrested -= mva.Events_pedArrestedEvent;
+        }
+
+        internal static void AddCustomPedSearchItem(Ped ped) {
+            PolicingRedefined.API.SearchItemsAPI.AddCustomPedSearchItem(new PolicingRedefined.Interaction.Assets.SearchItem("Gun", ped));
         }
     }
 }
