@@ -1,7 +1,6 @@
+using AmbientAICallouts;
 using AmbientAICallouts.API;
 using LSPD_First_Response.Mod.API;
-using PolicingRedefined.API;
-using PolicingRedefined.Interaction.Assets;
 using Rage;
 using System;
 using System.Collections.Generic;
@@ -43,10 +42,6 @@ namespace MVA
                 while (!posFound)
                 {
                     roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
-
-
-                    //isSTPRunning = IsExternalPluginRunning("StopThePed", new Version("4.9.3.5"));
-                    //Game.LogTrivial("[AmbientAICallouts] [initialization] INFO: Detection - StopThePed: " + isSTPRunning);
 
                     Vector3 irrelevant;
                     heading = 0f;       //vieleicht guckt der MVA dann in fahrtrichtung der unit
@@ -461,6 +456,7 @@ namespace MVA
                 return false;
             }
         }
+
         public override bool End()
         {
             //Code for finishing the the crime scene. return true when Succesfull.
@@ -796,7 +792,7 @@ namespace MVA
             GameFiber.Sleep(3000);
 
             LogTrivialDebug_withAiC(" DEBUG: choose what should happen");
-            switch (new Random().Next(0, 3))
+            switch (new Random().Next(0, 4))
             {
                 case 0:
                     Suspect1Flees();
@@ -806,7 +802,7 @@ namespace MVA
                     Suspect2Flees();
                     //EndOfPursuit();
                     break;
-                case 2:
+                default:
                     NothingHappens();
                     break;
             }
@@ -842,25 +838,10 @@ namespace MVA
         private void Suspect2Flees()
         {
             LogTrivialDebug_withAiC(" DEBUG: Suspect2Flees() entered");
-            if (isSTPRunning) ExternalPluginSupport.logInSTPEvents(this);          //Stp Support
-            if (isPRRunning) ExternalPluginSupport.logInPREvents(this);
-            LSPDFR_Functions.AddPedContraband(Suspects[1], LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
 
-            int i = 0;
-            while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedByThirdPartyPlugin && i < 2 * 60/*sekunden*/   )
-            {
-                i++;
-                GameFiber.Sleep(500);
-            }
+            bool suspectArrested = FristYourSuspect(Suspects[1], true);
 
-            if (LSPDFR_Functions.IsPedArrested(Suspects[1]) || suspectArrestedByThirdPartyPlugin)
-            {
-                Game.DisplaySubtitle("~b~Officer~w~: Great. " + (Units[0].UnitOfficers.Count == 1 ? "I" : "We") + " finished here too. Thanks for the Backup", 6000);
-            }
-            else
-            {
-                if (i >= 2 * 60) { Game.DisplaySubtitle("~b~Officer~w~: Would you PLEASE frisk your suspect! We can't stay here all day.", 6000); }
-                while (!LSPDFR_Functions.IsPedBeingFrisked(Suspects[1]) && !suspectFirskedByThirdPartyPlugin)  { GameFiber.Sleep(500); }
+            if (!suspectArrested) {
                 LHandle pursuit = LSPDFR_Functions.CreatePursuit();
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[1]);
                 GameFiber.Sleep(1800);
@@ -868,9 +849,10 @@ namespace MVA
                 if (Units[0].UnitOfficers.Count > 1) LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[1]);
                 Functions.AiCandHA_AddHelicopterToPursuit(MO, pursuit);
                 GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 0);
+            } else {
+                LogTrivialDebug_withAiC(" DEBUG: Suspect 2 arrested befor able to flee.");
+                ThanksAndBye();
             }
-            if (isSTPRunning) try { ExternalPluginSupport.logOutSTPEvents(this); } catch { }          //Stp Support
-            if (isPRRunning) try { ExternalPluginSupport.logOutPREvents(this); } catch { }          //Stp Support
         }
 
         private void EndOfPursuit()
@@ -903,24 +885,33 @@ namespace MVA
             finished = true;
             EnterAndDismiss(Units[0]);
         }
-        private void NothingHappens()
-        {
+        private void NothingHappens() {
             LogTrivialDebug_withAiC(" DEBUG: NothingHappens() entered");
-            int a = 0; while (a < 46/*seconds*/) if (!Helper.IsGamePaused()) { a++; GameFiber.Sleep(1000); }        //sleep wait for action until player is back in game
+            //int a = 0; while (a < 46/*seconds*/) if (!Helper.IsGamePaused()) { a++; GameFiber.Sleep(1000); }        //sleep wait for action until player is back in game
+
+            FristYourSuspect(Suspects[1], false);
+
+            ThanksAndBye();
+
+            finished = true;
+            EnterAndDismiss(Units[0]);
+        }
+
+        private void ThanksAndBye() {
             Helper.TurnPedToFace(Units[0].UnitOfficers[0], Game.LocalPlayer.Character);
             GameFiber.Sleep(1000);
-            Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "GENERIC_THANKS", 0, SpeechModifier.Force); 
-            Game.DisplaySubtitle("~b~Officer~w~: We are done. Thanks for your help.", 3000);
+            Units[0].UnitOfficers[1].PlayAmbientSpeech(null, "GENERIC_THANKS", 0, SpeechModifier.Force);
+            Game.DisplaySubtitle("~b~Officer~w~: Great. " + (Units[0].UnitOfficers.Count == 1 ? "I" : "We") + " finished here. Thanks for the Backup", 6000);
             GameFiber.Sleep(3000);
 
 
             //Peds Leave, Cops Aproach own vehicle
             Game.LogTrivialDebug($"[AmbientAICallouts] [AiCallout MVA] DEBUG: Scene cleared");
             Functions.AiCandHA_DismissHelicopter(MO);
-            foreach (var suspect in Suspects) if (suspect) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); }
+            foreach (var suspect in Suspects)
+                if (suspect) { suspect.Tasks.Clear(); suspect.Dismiss(); GameFiber.Sleep(6000); }
             for (int i = 1; i < Units[0].UnitOfficers.Count; i++) { Units[0].UnitOfficers[i].Tasks.Clear(); }
-            if (Units[0].UnitOfficers.Count != 1)
-            {
+            if (Units[0].UnitOfficers.Count != 1) {
                 var officerAtCopCar = Units[0].UnitOfficers[0].Tasks.FollowNavigationMeshToPosition(Units[0].PoliceVehicle.GetOffsetPosition(new Vector3(2.7f, 0f, 0f)), heading + 0f, 0.75f);
                 Units[0].UnitOfficers[1].Tasks.FollowNavigationMeshToPosition(Units[0].PoliceVehicle.GetOffsetPosition(new Vector3(2.2f, 1.3f, 0f)), heading + 180f, 0.75f).WaitForCompletion();
                 while (officerAtCopCar.IsActive) { GameFiber.Sleep(300); }
@@ -928,9 +919,49 @@ namespace MVA
                 Helper.TurnPedToFace(Units[0].UnitOfficers[1], Units[0].UnitOfficers[0]);
                 GameFiber.Sleep(16000);
             }
+        }
 
-            finished = true;
-            EnterAndDismiss(Units[0]);
+        private bool FristYourSuspect(Ped suspect, bool injectIlegalItems) {
+            bool arrested = false;
+            if (isPRRunning) PRPluginSupport.logInPREvents(this);          //Pr Support
+            else if (isSTPRunning) STPPluginSupport.logInSTPEvents(this);          //Stp Support
+            if (injectIlegalItems) LSPDFR_Functions.AddPedContraband(suspect, LSPD_First_Response.Engine.Scripting.Entities.ContrabandType.Narcotics, "Heroin");
+
+            int i = 0;
+            while (!LSPDFR_Functions.IsPedBeingFrisked(suspect)
+                && !suspectFirskedByThirdPartyPlugin
+                && !LSPDFR_Functions.IsPedArrested(suspect)
+                && !suspectArrestedByThirdPartyPlugin
+                && i++ <= 85/*sekunden*/) 
+            {
+                if (i == 33) {
+                    Game.DisplaySubtitle("~b~Officer~w~: Would you PLEASE frisk your suspect! We can't stay here all day.", 6000);
+                }
+                else if (i >= 40 && i % 20 == 0) // ab 60 Sekunden alle 20 sekunden eine Helper Message
+                {
+                    string plugin = "LSPDFR";
+                    if (isPRRunning) plugin = "Policing Redefined";
+                    else if (isSTPRunning) plugin = "StopThePed";
+                    Game.DisplayHelp("Open the Ped Context menu of " + plugin + " and perform a pat down", 6000);
+                }
+
+                GameFiber.Sleep(1000);
+            }
+
+            if (i >= 85) { /*Game.DisplaySubtitle("~b~Officer~w~: FINE.! Then don't Frisk your Suspect. Your fuck*** risk.", 6000);*/ }
+            else if (LSPDFR_Functions.IsPedBeingFrisked(suspect) || suspectFirskedByThirdPartyPlugin) {
+            } 
+            else if (LSPDFR_Functions.IsPedArrested(suspect) || suspectArrestedByThirdPartyPlugin) {
+                arrested = true; 
+            }
+
+
+            if (isPRRunning)
+                try { PRPluginSupport.logOutPREvents(this); } catch { }          //Rp Support
+            else if (isSTPRunning)
+                try { STPPluginSupport.logOutSTPEvents(this); } catch { }          //Stp Support
+
+            return arrested;
         }
 
         private bool IsPedOccupiedbyLSPDFRInteraction(Ped ped)
