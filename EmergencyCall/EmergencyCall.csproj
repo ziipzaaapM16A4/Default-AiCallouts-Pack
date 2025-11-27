@@ -55,6 +55,10 @@
     <Reference Include="AmbientAICallouts">
       <HintPath>..\..\AmbientAICallouts\bin\x64\Debug\AmbientAICallouts.dll</HintPath>
     </Reference>
+    <Reference Include="LSPD First Response, Version=0.4.8037.37597, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\SDK\LSPD First Response.dll</HintPath>
+    </Reference>
     <Reference Include="RagePluginHookSDK">
       <HintPath>..\..\..\SDK\RagePluginHookSDK.dll</HintPath>
     </Reference>
