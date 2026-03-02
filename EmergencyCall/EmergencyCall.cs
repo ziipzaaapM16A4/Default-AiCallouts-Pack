@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Rage;
 using Rage.Native;
-using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
-using Functions = AmbientAICallouts.API.Functions;
-using AmbientAICallouts.API;
+using Rage.Exceptions;
 using LSPD_First_Response.Mod.API;
-using System.ComponentModel;
+using LSPDFR_Functions = LSPD_First_Response.Mod.API.Functions;
+using AmbientAICallouts.API;
+using Functions = AmbientAICallouts.API.Functions;
 
 namespace EmergencyCall
 {
@@ -33,13 +34,12 @@ namespace EmergencyCall
                 bool posFound = false;
                 int trys = 0;
                 bool demandPavement = true;
-                while (!posFound)
-                {
+                while (!posFound) {
                     roadside = World.GetNextPositionOnStreet(Game.LocalPlayer.Character.Position.Around(AmbientAICallouts.API.Functions.minimumAiCalloutDistance + 10f, AmbientAICallouts.API.Functions.maximumAiCalloutDistance - 10f));
                     NativeFunction.Natives.xB61C8E878A4199CA<bool>(roadside, demandPavement, out roadside, 16); //GET_SAFE_COORD_FOR_PED
                     Location = roadside;
 
-                    if (Functions.IsLocationAcceptedBySystem(Location) && Location != new Vector3(0,0,0))
+                    if (Functions.IsLocationAcceptedBySystem(Location) && Location != new Vector3(0, 0, 0))
                         posFound = true;
 
                     trys++;
@@ -48,13 +48,20 @@ namespace EmergencyCall
                 }
 
                 caller = new Ped(Location);
-                warrantForArrest = LSPDFR_Functions.GetPersonaForPed(caller).Wanted;
+                GameFiber.Sleep(2000);
+                if (caller)
+                    warrantForArrest = LSPDFR_Functions.GetPersonaForPed(caller).Wanted;
+                else
+                    throw new Rage.Exceptions.InvalidHandleableException(caller);
                 Rage.Native.NativeFunction.Natives.x240A18690AE96513<bool>(caller.Position, out streetDirection, 0, 3f, 0f); //GET_CLOSEST_VEHICLE_NODE
                 Helper.TurnPedToFace(caller, streetDirection);
                 GameFiber.Sleep(2500);
                 caller.Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), "idle_c", 2f, AnimationFlags.Loop);
 
                 return true;
+            } catch (Rage.Exceptions.InvalidHandleableException e) {          // a extra log to determine wether the ivalidhandleableexception parameter ihandlable is delivering enough data to the log
+                LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + "InvalidHandleableException obj thrown to catch. DATA: " + e);
+                return false;
             } catch (System.Threading.ThreadAbortException) { return false; } catch (Exception e) {
                 LogTrivial_withAiC("ERROR: in AICallout object: At Setup(): " + e);
                 return false;
