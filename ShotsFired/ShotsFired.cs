@@ -165,6 +165,7 @@ namespace ShotsFired
                 AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPursuitDisableAIForPed()");
                 LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
                 LSPD_First_Response.Mod.API.Functions disablecrimereportTempVar = new LSPD_First_Response.Mod.API.Functions();  //Awaiting change through LMS!
+                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPedDisableCrimeEvents()");
                 disablecrimereportTempVar.SetPedDisableCrimeEvents(Suspects[0], true);                                          //Awaiting change through LMS!
                 AmbientAICallouts.Helper.LogLSPDFRAPIfunction("GetPedPursuitAttributes()");
                 var attributes = LSPDFR_Functions.GetPedPursuitAttributes(Suspects[0]);
