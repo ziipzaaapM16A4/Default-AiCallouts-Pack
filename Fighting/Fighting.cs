@@ -344,7 +344,10 @@ namespace Fighting
                                 }
                                 for (int i = 0; i < Units[0].UnitOfficers.Count; i++)
                                 {
-                                    if (i != 1) { AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()"); LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[i]); } // 2.Ofc
+                                    if (i != 1) {
+                                        AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
+                                        LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[i]);
+                                    } // 2.Ofc
                                 }
                                 timeStamp = Game.GameTime;
                                 if (Units[0].UnitOfficers.Count > 1 ? Units[0].UnitOfficers[1] : false) statusChild = 12; else statusChild = 15;
@@ -540,9 +543,12 @@ namespace Fighting
         /// <summary>is Ped Arrested, Stopped but not Transported by Any Plugin</summary>
         private bool isPedNeededToBeWhatched(Ped ped) {
             AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedBeingGrabbed(), IsPedBeingGrabbedByPlayer()");
-            if (LSPDFR_Functions.IsPedBeingGrabbed(ped) && !LSPDFR_Functions.IsPedBeingGrabbedByPlayer(ped)) return false;
-            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
-            if (LSPDFR_Functions.IsPedArrested(ped) || isPedStoppedByAnyPlugin(ped) || LSPDFR_Functions.IsPedGettingArrested(ped)) return true;
+            if (LSPDFR_Functions.IsPedBeingGrabbed(ped) && !LSPDFR_Functions.IsPedBeingGrabbedByPlayer(ped)) {
+                return false;
+            } else {
+                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
+                if (LSPDFR_Functions.IsPedArrested(ped) || isPedStoppedByAnyPlugin(ped) || LSPDFR_Functions.IsPedGettingArrested(ped)) return true;
+            }
             return false;
         }
 
