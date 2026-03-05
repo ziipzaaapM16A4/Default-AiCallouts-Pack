@@ -51,7 +51,7 @@ namespace EmergencyCall
                 GameFiber.Sleep(2000);
                 if (caller)
                 {
-                    AmbientAICallouts.Helper.LogLSPDFRAPIfunction("GetPersonaForPed()");
+                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("GetPersonaForPed()");
                     warrantForArrest = LSPDFR_Functions.GetPersonaForPed(caller).Wanted;
                 }
                 else
@@ -90,7 +90,7 @@ namespace EmergencyCall
                 while (callactive) {
 
                     //Pursuit - Any suspect in pursuit? -->> hunt felon
-                    AmbientAICallouts.Helper.LogLSPDFRAPIfunction("GetActivePursuit(), IsPedInPursuit()");
+                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("GetActivePursuit(), IsPedInPursuit()");
                     if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null && Suspects.Any(s => (s ? LSPDFR_Functions.IsPedInPursuit(s) : false)) && !pursuitWasSelfInitiated) {
                         status = Estate.pursuit;
                     }
@@ -100,20 +100,20 @@ namespace EmergencyCall
                         case Estate.pursuit:
                             LogTrivial_withAiC("Investigation turned into a Chase. Starting Pursuit");
                             Units[0].PoliceVehicle.TopSpeed = 45f;
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                             foreach (var cop in Units[0].UnitOfficers) { LSPDFR_Functions.AddCopToPursuit(pursuit, cop); }
 
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitCalledIn()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitCalledIn()");
                             if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit)
                             && Suspects.Any(s => (s ? Units[0].UnitOfficers.Any(ofc => ofc.DistanceTo(s) < 70f) : false)))
                             {
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
                                 LSPDFR_Functions.SetPursuitAsCalledIn(pursuit);
                             }
 
                             //aic.OnScene = true; //Missing OnScene detail
                             Units[0].UnitStatus = EUnitStatus.OnScene;
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                             GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 360000); //LSPDFR Pursuit managing now
                             callactive = false;
                             break;
@@ -237,24 +237,24 @@ namespace EmergencyCall
                             break;
                         case Estate.handling: //if caller is suspect, then arrest him
                             pursuitWasSelfInitiated = true;
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
                             var Arrest = LSPDFR_Functions.CreatePursuit();
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPursuitInvestigativeMode()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitInvestigativeMode()");
                             LSPDFR_Functions.SetPursuitInvestigativeMode(Arrest, true);
                             foreach (var ofc in Units[0].UnitOfficers)
                             {
                                 if (ofc)
                                 {
-                                    AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
+                                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                                     LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
                                 }
                             }
                             if (caller)
                             {
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
                                 LSPDFR_Functions.AddPedToPursuit(Arrest, caller);
                             }
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                             while (LSPDFR_Functions.IsPursuitStillRunning(Arrest)) { GameFiber.Sleep(500); } //ToDo: Bad Practice. Blocks the thread. Find a better way to do this.
                             break;
                     }

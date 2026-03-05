@@ -55,9 +55,9 @@ namespace Fighting
 
                 Suspects[0].Tasks.FightAgainst(Suspects[1]);
                 Suspects[1].Tasks.FightAgainst(Suspects[0]);
-                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPedResistanceChance()");
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPedResistanceChance()");
                 LSPDFR_Functions.SetPedResistanceChance(Suspects[0], 0.35f);
-                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPedResistanceChance()");
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPedResistanceChance()");
                 LSPDFR_Functions.SetPedResistanceChance(Suspects[1], 0.35f);
 
                 return true;
@@ -85,25 +85,25 @@ namespace Fighting
                 while (callactive)
                 {
                     //Pursuit - Any suspect in pursuit? -->> hunt felon
-                    AmbientAICallouts.Helper.LogLSPDFRAPIfunction("GetActivePursuit(), IsPedInPursuit()");
+                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("GetActivePursuit(), IsPedInPursuit()");
                     if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null && Suspects.Any(s => (s ? LSPDFR_Functions.IsPedInPursuit(s) : false)) && !pursuitWasSelfInitiated)
                     {
                         LogTrivial_withAiC("Fighting turned into a Chase. Starting Pursuit");
                         Units[0].PoliceVehicle.TopSpeed = 45f;
-                        AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                         foreach (var cop in Units[0].UnitOfficers) { LSPDFR_Functions.AddCopToPursuit(pursuit, cop); }
 
-                        AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitCalledIn()");
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitCalledIn()");
                         if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit) 
                         && Suspects.Any(s => (s ? Units[0].UnitOfficers.Any(ofc => ofc.DistanceTo(s) < 70f) : false))) 
                         {
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
                             LSPDFR_Functions.SetPursuitAsCalledIn(pursuit);
                         }
 
                         //aic.OnScene = true; //Missing OnScene detail
                         Units[0].UnitStatus = EUnitStatus.OnScene;
-                        AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                         GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 360000); //LSPDFR Pursuit managed ab jetzt
                         callactive = false;
                     }
@@ -209,7 +209,7 @@ namespace Fighting
                     else if (status == Estate.investigation)
                     {
                         if (statusChild == 0) {
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedArrested()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedArrested()");
                             if (Suspects.All(s => s ? LSPDFR_Functions.IsPedArrested(s) : false))
                             { statusChild = 1; LogTrivial_withAiC($"INFO: Situation seems to be under control. Leaving because all suspects are arrested"); }
                             else if (Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false))
@@ -267,7 +267,7 @@ namespace Fighting
                             }
                             else if (statusChild == 24)
                             {
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
                                 if (!(Suspects.Any(s => s ? isPedNeededToBeWhatched(s) : false) && Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true))
                                     || timeStamp + 604 * 1000 < Game.GameTime)
                                 {
@@ -277,7 +277,7 @@ namespace Fighting
                             }
                             else if (statusChild == 25)
                             {
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
                                 if (Suspects.All(s => s ? !LSPDFR_Functions.IsPedInPursuit(s) : true))
                                 {
                                     Game.DisplaySubtitle($"~b~Cop~w~: Alright. See ya", 4000);
@@ -331,21 +331,21 @@ namespace Fighting
                             {
                                 LogTrivial_withAiC($"INFO: A ped has been killed. Arresting the Suspect.");
                                 pursuitWasSelfInitiated = true;
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
                                 pursuit = LSPDFR_Functions.CreatePursuit();
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPursuitInvestigativeMode()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitInvestigativeMode()");
                                 LSPDFR_Functions.SetPursuitInvestigativeMode(pursuit, true);
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("SetPursuitCopsCanJoin()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitCopsCanJoin()");
                                 LSPDFR_Functions.SetPursuitCopsCanJoin(pursuit, false);
                                 foreach (var sus in Suspects.Where(s => !s.IsDead))
                                 {
-                                    AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
+                                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
                                     LSPDFR_Functions.AddPedToPursuit(pursuit, sus);
                                 }
                                 for (int i = 0; i < Units[0].UnitOfficers.Count; i++)
                                 {
                                     if (i != 1) {
-                                        AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
+                                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                                         LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[i]);
                                     } // 2.Ofc
                                 }
@@ -371,10 +371,10 @@ namespace Fighting
                             {
                                 if (timeStamp + 14 * 1000 < Game.GameTime)
                                 {
-                                    AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
+                                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                                     if (pursuit != null ? LSPDFR_Functions.IsPursuitStillRunning(pursuit) : false) 
                                     {
-                                        AmbientAICallouts.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
+                                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                                         LSPDFR_Functions.AddCopToPursuit(pursuit, Units[0].UnitOfficers[1]);
                                         timeStamp = Game.GameTime;
                                         statusChild = 15;
@@ -412,7 +412,7 @@ namespace Fighting
                                 }
                             } else if (statusChild == 15)
                             {
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                                 if (pursuit != null ? !LSPDFR_Functions.IsPursuitStillRunning(pursuit) : true) {timeStamp = Game.GameTime; callactive = false; }
                             }
                         }
@@ -478,7 +478,7 @@ namespace Fighting
                         }
                         else if (statusChild == 1 && timeStamp + 15 * 1000 < Game.GameTime)
                         {
-                            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsCalloutRunning()");
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsCalloutRunning()");
                             if (LSPDFR_Functions.IsCalloutRunning())                                                        //usually it only checks every 11 Seconds
                                 callactive = false;
                         }
@@ -498,7 +498,7 @@ namespace Fighting
                         {
                             if (Suspects.First(s => !s.IsDead) is var murderer && murderer)
                             {
-                                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
                                 if (!isPedArrestedOrStoppedByAnyPlugin(murderer) && !LSPDFR_Functions.IsPedInPursuit(murderer))
                                 {
                                     if (!Helper.IsTaskActive(murderer, 221))
@@ -542,23 +542,23 @@ namespace Fighting
 
         /// <summary>is Ped Arrested, Stopped but not Transported by Any Plugin</summary>
         private bool isPedNeededToBeWhatched(Ped ped) {
-            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedBeingGrabbed(), IsPedBeingGrabbedByPlayer()");
+            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedBeingGrabbed(), IsPedBeingGrabbedByPlayer()");
             if (LSPDFR_Functions.IsPedBeingGrabbed(ped) && !LSPDFR_Functions.IsPedBeingGrabbedByPlayer(ped)) {
                 return false;
             } else {
-                AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
                 if (LSPDFR_Functions.IsPedArrested(ped) || isPedStoppedByAnyPlugin(ped) || LSPDFR_Functions.IsPedGettingArrested(ped)) return true;
             }
             return false;
         }
 
         private bool isPedArrestedOrStoppedByAnyPlugin(Ped ped) {
-            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
+            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
             return LSPDFR_Functions.IsPedArrested(ped) || LSPDFR_Functions.IsPedGettingArrested(ped) || isPedStoppedByAnyPlugin(ped);
         }
 
         private bool isPedStoppedByAnyPlugin(Ped ped) {
-            AmbientAICallouts.Helper.LogLSPDFRAPIfunction("IsPedStoppedByPlayer()");
+            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedStoppedByPlayer()");
             return LSPDFR_Functions.IsPedStoppedByPlayer(ped) || 
                 (isSTPRunning ? STPPluginSupport.isPedStoppedBySTP(ped) : false) || 
                 (isPRRunning ? PRPluginSupport.isPedStoppedByPR(ped) : false);
