@@ -63,6 +63,7 @@ namespace ArrestWarrant
                 //Suspects[0].Model = new Model("");   //find a better moddel. it would be great if they would be just mean from gangs
                 Suspects[0].Position = nextLocation.Position;
                 Suspects[0].Heading = nextLocation.Heading;
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("GetPersonaForPed()");
                 var Persona = LSPDFR_Functions.GetPersonaForPed(Suspects[0]);
                 Persona.Wanted = true;
                 Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("mp_cop_tutdealer_leaning@base"), "base", 1f, AnimationFlags.Loop);
@@ -113,9 +114,13 @@ namespace ArrestWarrant
                     if (complyingArrest)
                     {
                         LogTrivialDebug_withAiC($"DEBUG: Starting complying arrest");
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
                         var Arrest = LSPDFR_Functions.CreatePursuit();
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitInvestigativeMode()");
                         LSPDFR_Functions.SetPursuitInvestigativeMode(Arrest, true);
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                         foreach (var ofc in Units[0].UnitOfficers) LSPDFR_Functions.AddCopToPursuit(Arrest, ofc);
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
                         LSPDFR_Functions.AddPedToPursuit(Arrest, Suspects[0]);
                         //LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
                         
@@ -133,16 +138,21 @@ namespace ArrestWarrant
                                 List<string> idleAnims = new List<string>() { "idle_a", "idle_b", "idle_c" };
                                 while (Suspects[0])
                                 {                                                                                   //sollange call läuft //Workaround
+                                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedStoppedByPlayer()");
                                     if (Suspects[0].IsAlive && !LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedStoppedByPlayer(Suspects[0]))
                                     {
                                         if (!senarioTaskAsigned)
                                         {
                                             if (Suspects[0].Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && Suspects[0].Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing) 
+                                            {
+                                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedBeingCuffed(), IsPedBeingFrisked(), IsPedBeingGrabbed(), IsPedInPursuit()");
                                                 if (Suspects[0] && !LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedBeingCuffed(Suspects[0]) && !LSPDFR_Functions.IsPedBeingFrisked(Suspects[0]) && !LSPDFR_Functions.IsPedBeingGrabbed(Suspects[0]) && !LSPDFR_Functions.IsPedInPursuit(Suspects[0])) 
                                                     Suspects[0].Tasks.PlayAnimation(new AnimationDictionary("oddjobs@towingangryidle_a"), idleAnims[new Random().Next(1, idleAnims.Count)], 1f, AnimationFlags.None); //} catch (Exception e) { LogTrivialDebug_withAiC()($"[AmbientAICallouts] [Fiber {fiberNumber}]  WARNING: Animation failed: " + e); }
+                                            }
                                         }
                                     }
 
+                                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedInPursuit()");
                                     if (!LSPDFR_Functions.IsPedInPursuit(Suspects[0]))
                                     {
                                         var pedsAroundSuspect = Suspects[0].GetNearbyPeds(8);
@@ -150,6 +160,7 @@ namespace ArrestWarrant
                                         {
                                             if (ped)
                                             {
+                                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedACop()");
                                                 if ( !ped.IsPlayer && !LSPDFR_Functions.IsPedACop(ped) )
                                                 {
                                                     try { ped.Tasks.Flee(Suspects[0], 60f, 50000); } catch { }
@@ -223,9 +234,11 @@ namespace ArrestWarrant
                                 {
                                     if (officer)
                                     {
+                                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedGettingArrested(), IsPedArrested()");
                                         if (thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.InProgress && thisOfficer.Tasks.CurrentTaskStatus != Rage.TaskStatus.Preparing && (Suspects[0] ? !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) && !LSPDFR_Functions.IsPedArrested(Suspects[0]): false) )
                                         {
                                             try {
+                                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetCopIgnoreAmbientCombatControl()");
                                                 LSPDFR_Functions.SetCopIgnoreAmbientCombatControl(officer, true);
                                                 thisOfficer.Tasks.FightAgainst(Suspects[0]); 
                                             } catch { }
@@ -265,6 +278,7 @@ namespace ArrestWarrant
                                 }
 
                             });
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetCopIgnoreAmbientCombatControl()");
                             LSPDFR_Functions.SetCopIgnoreAmbientCombatControl(officer, false);
                             GameFiber.Sleep(200);
                         }
@@ -325,14 +339,18 @@ namespace ArrestWarrant
                                 //Units[0].UnitOfficers[RadioOfficerIndex].Tasks.PlayAnimation()
 
                                 GameFiber.Sleep(5000);
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedArrested(), IsPedGettingArrested()");
                                 if (!LSPDFR_Functions.IsPedArrested(Suspects[0]) && !LSPDFR_Functions.IsPedGettingArrested(Suspects[0]) ) { Suspects[0].IsPersistent = false; }
                                 GameFiber.Sleep(5000);
                                 EnterAndDismiss(Units[0]);
                             }
                             else
                             {
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
                                 var Pursuit = LSPDFR_Functions.CreatePursuit();
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
                                 LSPDFR_Functions.AddPedToPursuit(Pursuit, Suspects[0]);
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                                 while (LSPDFR_Functions.IsPursuitStillRunning(Pursuit)) { GameFiber.Sleep(1000); }
                                 //ISSUE: Officers & Peds get Dismissed before the Arrest is fullfilled.
                             }
@@ -361,6 +379,7 @@ namespace ArrestWarrant
                                     //    break;
                             }
                             GameFiber.Sleep(15000);
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsCalloutRunning()");
                             while (LSPDFR_Functions.IsCalloutRunning()) { GameFiber.Sleep(11000); } //OLD: while (!OfficerRequiringAssistance.finished) { GameFiber.Sleep(11000); }
                         }
                     }

@@ -156,12 +156,18 @@ namespace ShotsFired
                 int tickcounter = 0;    //to count sleep processes to reach a specifc time.
                 bool acr_active = false;
 
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("CreatePursuit()");
                 pursuit = LSPDFR_Functions.CreatePursuit();
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
                 LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, false);
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddPedToPursuit()");
                 LSPDFR_Functions.AddPedToPursuit(pursuit, Suspects[0]);
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitDisableAIForPed()");
                 LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], true);
                 LSPD_First_Response.Mod.API.Functions disablecrimereportTempVar = new LSPD_First_Response.Mod.API.Functions();  //Awaiting change through LMS!
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPedDisableCrimeEvents()");
                 disablecrimereportTempVar.SetPedDisableCrimeEvents(Suspects[0], true);                                          //Awaiting change through LMS!
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("GetPedPursuitAttributes()");
                 var attributes = LSPDFR_Functions.GetPedPursuitAttributes(Suspects[0]);
                 attributes.AverageFightTime = 1;
                 if (new Random().Next(2) == 0) { Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_MICROSMG"), 200, true); } else { Suspects[0].Inventory.GiveNewWeapon(new WeaponAsset("WEAPON_PISTOL"), 200, true); }
@@ -247,6 +253,7 @@ namespace ShotsFired
                             {
                                 LogVerboseDebug_withAiC("player has now visual on suspect too");
                                 playerSpottedSuspect = true;
+                                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitIsActiveForPlayer()");
                                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                                 //possibly placing pursuit in progress msg
                             }
@@ -257,10 +264,11 @@ namespace ShotsFired
                         {
                             LogVerboseDebug_withAiC("suspect starts running");
                             suspectflees = true;
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitDisableAIForPed()");
                             LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
                         }
 
-                        //--------------------------------------- Unit Officers ------------------------------------------
+                        //--------------------------------------- Unit Officers------------------------------------------
                         foreach (PatrolUnit u in Units)
                         {
                             foreach(Ped o in u.UnitOfficers)
@@ -274,10 +282,12 @@ namespace ShotsFired
                                         {
                                             LogVerboseDebug_withAiC("Officer " + o + " has visual on suspect");
                                             aiSpottedSuspect = true;
+                                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitCalledIn()");
                                             if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit))
                                                 callInPursuit();
                                         }
 
+                                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedInPursuit(), AddCopToPursuit()");
                                     if (aiSpottedSuspect) if (Suspects[0] ? !LSPDFR_Functions.IsPedInPursuit(o) : false) LSPDFR_Functions.AddCopToPursuit(pursuit, o);
 
                                     //Arrived at the Scene still moving
@@ -302,6 +312,7 @@ namespace ShotsFired
                                     if (o.IsAlive && o.DistanceTo(Suspects[0]) < 15f)
                                     {
                                         suspectflees = true;
+                                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitDisableAIForPed()");
                                         LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
                                     }
 
@@ -318,6 +329,7 @@ namespace ShotsFired
                                     if (o.IsAlive && o.DistanceTo(Suspects[0]) < 15f)
                                     {
                                         suspectflees = true;
+                                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitDisableAIForPed()");
                                         LSPDFR_Functions.SetPursuitDisableAIForPed(Suspects[0], false);
                                     }
                                 }
@@ -399,7 +411,9 @@ namespace ShotsFired
         {            
             if (playerRespondingInAdditon || calledInByCrimeReport)
             {
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
                 LSPDFR_Functions.SetPursuitAsCalledIn(pursuit, true);                   //ATTENTION: Keep this order to prevent losing the Pursuit Radar.
+                AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitIsActiveForPlayer()");
                 LSPDFR_Functions.SetPursuitIsActiveForPlayer(pursuit, true);            //ATTENTION: Keep this order to prevent losing the Pursuit Radar.
                 //Game.DisplayNotification(null, "CHAR_CALL911", "Dispatch", "pursuit initiated", $"Pursuit initiated at: {World.TimeOfDay}."); //ToDo: ersetzte felder.
                 LSPDFR_Functions.PlayScannerAudioUsingPosition("ATTENTION_ALL_UNITS WE_HAVE A CRIME_SUSPECT_RESISTING_ARREST IN_OR_ON_POSITION", Location); //ToDo: Teste parameter der dispatch ruf function
@@ -414,6 +428,7 @@ namespace ShotsFired
             {
                 if (ped)
                 {
+                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPedACop()");
                     if (LSPDFR_Functions.IsPedACop(ped)
                         || ped == Game.LocalPlayer.Character)
                     {

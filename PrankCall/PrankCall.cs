@@ -63,18 +63,25 @@ namespace PrankCall
                 while (callactive)
                 {
                     //Pursuit
+                    AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("GetActivePursuit()");
                     if ((pursuit = LSPDFR_Functions.GetActivePursuit()) != null)
                     {
                         LogTrivial_withAiC("PrankCall turned unexpectedly into an actuall Case. Starting Pursuit");
                         Units[0].PoliceVehicle.TopSpeed = 45f;
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("AddCopToPursuit()");
                         foreach (var cop in Units[0].UnitOfficers) { LSPDFR_Functions.AddCopToPursuit(pursuit, cop); }
 
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitCalledIn()");
                         if (!LSPDFR_Functions.IsPursuitCalledIn(pursuit)
                         && Suspects.Any(s => (s ? Units[0].UnitOfficers.Any(ofc => ofc.DistanceTo(s) < 70f) : false)))
+                        {
+                            AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("SetPursuitAsCalledIn()");
                             LSPDFR_Functions.SetPursuitAsCalledIn(pursuit);
+                        }
 
                         //aic.OnScene = true; //Missing OnScene detail
                         Units[0].UnitStatus = EUnitStatus.OnScene;
+                        AmbientAICallouts.API.Helper.LogLSPDFRAPIfunction("IsPursuitStillRunning()");
                         GameFiber.SleepWhile(() => LSPDFR_Functions.IsPursuitStillRunning(pursuit), 360000); //LSPDFR Pursuit managed ab jetzt
                         callactive = false; 
                     }
